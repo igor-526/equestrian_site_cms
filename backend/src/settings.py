@@ -19,7 +19,9 @@ class Settings(BaseSettings):
     )
 
     cms_panel_domain: str = Field(default="localhost:3000", alias="CMS_PANEL_DOMAIN")
-    cms_backend_domain: str = Field(default="localhost:8000", alias="CMS_BACKEND_DOMAIN")
+    cms_backend_domain: str = Field(
+        default="localhost:8000", alias="CMS_BACKEND_DOMAIN"
+    )
     main_site_domain: str = Field(default="localhost:3000", alias="MAIN_SITE_DOMAIN")
 
     db_user: str = Field(default="nexoradev", alias="POSTGRES_USER")

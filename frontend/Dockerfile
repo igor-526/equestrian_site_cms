@@ -21,7 +21,6 @@ ENV NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL}
 ENV NODE_ENV=production
 
 RUN npm run build
-RUN npx next export
 
 FROM nginx:1.27-alpine AS runner
 

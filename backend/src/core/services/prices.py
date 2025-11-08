@@ -67,9 +67,7 @@ class PriceService:
         return PaginatedEntities(items=result, total=prices.total)
 
     async def create_price(self, *, data: PriceCreateInDto) -> PriceOutDto:
-        if await self.price_repository.get_by_unique(
-            name=data.name, group=data.group
-        ):
+        if await self.price_repository.get_by_unique(name=data.name, group=data.group):
             raise ClientError("Цена с таким названием и группой уже существует")
 
         price_payload = data.model_dump(exclude={"variants"})
@@ -150,9 +148,7 @@ class PriceService:
         if await self.price_variant_repository.get_by_unique(
             name=data.name, price_id=price_id
         ):
-            raise ClientError(
-                f"Вариант цены с названием '{data.name}' уже существует"
-            )
+            raise ClientError(f"Вариант цены с названием '{data.name}' уже существует")
 
         variant_entity = PriceVariant(
             price_id=price_id,

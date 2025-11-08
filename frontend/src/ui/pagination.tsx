@@ -6,7 +6,7 @@ import type {FiltersBaseType} from "@/types/filters/filterBase";
 const TablePagination = <TFilters extends FiltersBaseType = FiltersBaseType>({
     setFilters,
     total
-}: TablePaginationPropsType<TFilters>): JSX.Element => {
+}: TablePaginationPropsType<TFilters>) => {
     return (
         <Pagination
             defaultCurrent={1}

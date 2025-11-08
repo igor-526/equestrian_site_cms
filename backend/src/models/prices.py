@@ -12,7 +12,6 @@ prices = Table(
     Column("group", String(31), nullable=True),
     Column("price", Integer(), nullable=False),
     Column("price_formatter", String(7), nullable=False),
-
     UniqueConstraint("name", "group", name="uq_name_group")
 )
 
@@ -26,6 +25,5 @@ price_variants = Table(
     Column("description", String(255), nullable=True),
     Column("price", Integer(), nullable=False),
     Column("price_formatter", String(7), nullable=False),
-    
     UniqueConstraint("name", "price_id", name="uq_name_price_id")
 )

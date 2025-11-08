@@ -8,12 +8,12 @@ const StringFilter = <TFilters extends FiltersBaseType = FiltersBaseType>({
     setFilters,
     filterKey,
     placeHolder="Поиск"
-}: FilterStringPropsType<TFilters>): JSX.Element => {
+}: FilterStringPropsType<TFilters>) => {
     return (
         <>
             <Input
                 placeholder={placeHolder}
-                value={filters[filterKey]}
+                value={filters[filterKey] as string | undefined}
                 onChange={(e) => setFilters((prevState) => ({
                     ...prevState,
                     [filterKey]: e.target.value.trim() ? e.target.value.trim() : null

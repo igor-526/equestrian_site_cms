@@ -4,16 +4,12 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.protocols.repositories import (
-    UserRepositoryProtocol,
     PriceRepositoryProtocol,
     PriceVariantRepositoryProtocol,
+    UserRepositoryProtocol,
 )
 from depends.utils import get_session
-from repositories import (
-    UserRepository,
-    PriceRepository,
-    PriceVariantRepository,
-)
+from repositories import PriceRepository, PriceVariantRepository, UserRepository
 
 
 async def get_user_repository(

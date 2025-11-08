@@ -10,9 +10,9 @@ const TableWithFilters = <RecordType extends TableDataItemType = TableDataItemTy
     filtersElements,
     onRowListener,
     expandable
-}: TableWithFiltersProps<RecordType>): JSX.Element => {
+}: TableWithFiltersProps<RecordType>) => {
     const useStyle = createStyles(({ css, token }) => {
-        const { antCls } = token as { antCls: string };
+        const { antCls } = token as unknown as { antCls: string };
         return {
             customTable: css`
                 ${antCls}-table {

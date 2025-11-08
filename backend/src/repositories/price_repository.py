@@ -37,8 +37,10 @@ class PriceRepository(AbstractRepository[Price]):
                 condition = group_column.in_(non_null_groups)
             if any(value is None for value in group):
                 null_condition = group_column.is_(None)
-                condition = null_condition if condition is None else or_(
-                    condition, null_condition
+                condition = (
+                    null_condition
+                    if condition is None
+                    else or_(condition, null_condition)
                 )
             if condition is not None:
                 conditions.append(condition)
@@ -75,14 +77,10 @@ class PriceRepository(AbstractRepository[Price]):
                 stmt = stmt.order_by(*order_clauses)
 
         rows = await self.session.execute(stmt)
-        items = [
-            self.entity.model_validate(dict(row)) for row in rows.mappings().all()
-        ]
+        items = [self.entity.model_validate(dict(row)) for row in rows.mappings().all()]
         return PaginatedEntities(items=items, total=total)
 
-    async def get_by_unique(
-        self, *, name: str, group: str | None
-    ) -> Price | None:
+    async def get_by_unique(self, *, name: str, group: str | None) -> Price | None:
         stmt = select(self.table).where(
             self.table.c.name == name,
             getattr(self.table.c, "group") == group,
@@ -120,9 +118,7 @@ class PriceVariantRepository(AbstractRepository[PriceVariant]):
         rows = await self.session.execute(stmt)
         return [self.entity.model_validate(dict(row)) for row in rows.mappings().all()]
 
-    async def get_by_unique(
-        self, *, name: str, price_id: UUID
-    ) -> PriceVariant | None:
+    async def get_by_unique(self, *, name: str, price_id: UUID) -> PriceVariant | None:
         stmt = select(self.table).where(
             self.table.c.name == name,
             self.table.c.price_id == price_id,
@@ -132,4 +128,3 @@ class PriceVariantRepository(AbstractRepository[PriceVariant]):
         if mapping is None:
             return None
         return self.entity.model_validate(dict(mapping))
-

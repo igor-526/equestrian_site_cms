@@ -4,18 +4,18 @@ from fastapi import Cookie, Depends
 
 from core.exceptions.auth import InvalidCredentials
 from core.protocols.repositories import (
-    UserRepositoryProtocol,
     PriceRepositoryProtocol,
     PriceVariantRepositoryProtocol,
+    UserRepositoryProtocol,
 )
 from core.protocols.security import SecurityProtocol
 from core.schemas.users import UserOutDto
 from core.services.auth import AuthService
 from core.services.prices import PriceService
 from depends.repositories import (
-    get_user_repository,
     get_price_repository,
     get_price_variant_repository,
+    get_user_repository,
 )
 from depends.utils import get_security
 

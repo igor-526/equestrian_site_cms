@@ -28,12 +28,8 @@ async def list_prices(
     price_service: Annotated[PriceService, Depends(get_price_service)],
     limit: int | None = Query(default=25, ge=0, description="Количество элементов"),
     offset: int | None = Query(default=0, ge=0, description="Смещение"),
-    name: str | None = Query(
-        default=None, description="Фильтр по названию"
-    ),
-    description: str | None = Query(
-        default=None, description="Фильтр по описанию"
-    ),
+    name: str | None = Query(default=None, description="Фильтр по названию"),
+    description: str | None = Query(default=None, description="Фильтр по описанию"),
     group: list[str] | None = Query(
         default=None,
         description="Список групп услуг для фильтрации",
@@ -168,4 +164,3 @@ async def list_price_groups(
     price_service: Annotated[PriceService, Depends(get_price_service)],
 ) -> list[str]:
     return await price_service.list_price_groups()
-

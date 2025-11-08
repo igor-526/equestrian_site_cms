@@ -1,3 +1,3 @@
-from .base import Entity, TimeStampMixin, PaginatedEntities
+from .base import Entity, PaginatedEntities, TimeStampMixin
 from .prices import Price, PriceFormatter, PriceVariant
 from .user import User, UserScope, UserScopeRelation

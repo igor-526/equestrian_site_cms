@@ -1,7 +1,8 @@
 from uuid import UUID
+
 from pydantic import Field
 
-from core.entities import Price, PriceVariant, PriceFormatter
+from core.entities import Price, PriceFormatter, PriceVariant
 from core.schemas.baseschema import BaseSchema
 
 

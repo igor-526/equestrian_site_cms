@@ -1,0 +1,15 @@
+services:
+  frontend:
+    build:
+      context: /home/igor/Projects/eqSiteCMS/frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_BACKEND_URL: ${NEXT_PUBLIC_BACKEND_URL}
+    container_name: eqsitecms-${EQUESTRIAN_NAME}-frontend
+    restart: always
+    environment:
+      NEXT_PUBLIC_BACKEND_URL: ${NEXT_PUBLIC_BACKEND_URL}
+    ports:
+      - "${EXPOSE_APP_PORT}:80"
+
+

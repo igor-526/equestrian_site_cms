@@ -1,8 +1,8 @@
 services:
   frontend:
     build:
-      context: /home/igor/Projects/eqSiteCMS/frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./Dockerfile
       args:
         NEXT_PUBLIC_BACKEND_URL: ${NEXT_PUBLIC_BACKEND_URL}
     container_name: eqsitecms-${EQUESTRIAN_NAME}-frontend

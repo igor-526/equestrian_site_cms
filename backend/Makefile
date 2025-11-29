@@ -3,17 +3,17 @@ makemigrations:
 	docker exec eqsitecms-$(eqname)-app sh -c "cd src && uv run alembic revision --autogenerate -m '$(message)'"
 
 migrate:
-	docker exec nexora-app sh -c "cd src && uv run alembic upgrade head"
+	docker exec eqsitecms-$(eqname)-app sh -c "cd src && uv run alembic upgrade head"
 
 shell:
-	docker exec -it nexora-app sh
+	docker exec -it eqsitecms-$(eqname)-app sh
 
 # Opens postgresql command line interface
 psql:
-	docker exec -it nexora-db psql -U nexoradev
+	docker exec -it eqsitecms-$(eqname)-db psql -U nexoradev
 
 dumpall:
-	docker exec -t nexora-db pg_dumpall -c -U nexoradev > dump_`date +%Y-%m-%d"_"%H_%M_%S`.sql
+	docker exec -t eqsitecms-$(eqname)-db pg_dumpall -c -U nexoradev > dump_`date +%Y-%m-%d"_"%H_%M_%S`.sql
 
 lint:
 	uv run mypy src
@@ -23,10 +23,10 @@ format:
 
 # Dangerous
 drop_db:
-	docker exec -t nexora-db psql -U nexoradev -d postgres -c "DROP DATABASE IF EXISTS nexoradev;"
+	docker exec -t eqsitecms-$(eqname)-db psql -U nexoradev -d postgres -c "DROP DATABASE IF EXISTS nexoradev;"
 
 seed_dump:
-	cat seed_mocks.sql | docker exec -i nexora-db psql -U nexoradev
+	cat seed_mocks.sql | docker exec -i eqsitecms-$(eqname)-db psql -U nexoradev
 
 test:
 	PYTHONPATH=src uv run pytest -s -vv tests/

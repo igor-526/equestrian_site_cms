@@ -1,0 +1,36 @@
+import { priceCreate, priceDelete, priceDetail, priceList, priceUpdate } from "@/api/price";
+import { ApiListPaginatedResponseType, ApiResult } from "@/types/api/api";
+import { PriceCreateInDto, PriceListQueryParams, PriceOutDto, PriceUpdateInDto } from "@/types/api/prices";
+import { UUID } from "crypto";
+
+export const fetchPriceList = async (
+    params: PriceListQueryParams
+): Promise<ApiResult<ApiListPaginatedResponseType<PriceOutDto>>> => {
+    return await priceList(params);
+};
+
+export const fetchPrice = async (
+    priceId: UUID,
+    params?: { tables?: boolean; page_data?: boolean },
+): Promise<ApiResult<PriceOutDto>> => {
+    return await priceDetail(priceId, params);
+};
+
+export const fetchCreatePrice = async (
+    data: PriceCreateInDto
+): Promise<ApiResult<PriceOutDto>> => {
+    return await priceCreate(data);
+};
+
+export const fetchUpdatePrice = async (
+    priceId: UUID,
+    data: PriceUpdateInDto
+): Promise<ApiResult<PriceOutDto>> => {
+    return await priceUpdate(priceId, data);
+};
+
+export const fetchDeletePrice = async (
+    priceId: UUID
+): Promise<ApiResult<null>> => {
+    return await priceDelete(priceId);
+};

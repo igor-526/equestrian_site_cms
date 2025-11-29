@@ -4,6 +4,7 @@ import './globals.css';
 import React from "react";
 import {ConfigProvider} from "antd";
 import ru_RU from 'antd/lib/locale/ru_RU';
+import { NotificationProvider } from '@/contexts/NotificationContext';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -21,7 +22,9 @@ export default function RootLayout({
         <ConfigProvider locale={ru_RU}>
             <html lang="ru">
                 <body className={inter.className}>
-                    {children}
+                    <NotificationProvider>
+                        {children}
+                    </NotificationProvider>
                 </body>
             </html>
         </ConfigProvider>

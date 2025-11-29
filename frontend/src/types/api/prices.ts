@@ -1,55 +1,51 @@
-export type priceFormattersType = "equal" | "gt" | "lt" | "discuss";
+import { UUID } from "crypto";
+import { ApiCreatedUpdatedAtType, ApiPaginationType } from "./api";
+import { PhotoOutShortDto } from "./photos";
+import { PriceGroupSimpleOutDto } from "./priceGroups";
+import { TableType } from "./table";
 
-export type priceAvailableSortType = "name" | "description" | "group" | "price" | "-name" | "-description" | "-group" | "-price";
+export type PriceAvailableSorting = 'name' | '-name';
 
-export type priceListInDtoType = {
-    limit?: number,
-    offset?: number,
-    name?: string | null,
-    description?: string | null,
-    group?: string[] | null,
-    price_gt?: number | null,
-    price_lt?: number | null,
-    sort?: priceAvailableSortType[] | null,
-}
+export type PriceListQueryParams = ApiPaginationType & {
+    name?: string | string[] | null;
+    description?: string | null;
+    groups?: string | string[] | null;
+    sort?: PriceAvailableSorting[] | null;
+};
 
-export type priceCreateInDtoType = {
-    name: string,
-    description?: string | null,
-    group?: string | null,
-    price: number,
-    price_formatter: priceFormattersType,
-}
+export type PriceQueryParams = {
+    page_data?: boolean | null;
+    tables?: boolean | null;
+};
 
-export type priceUpdateInDtoType = Partial<priceCreateInDtoType>
+export type PriceOutDto = ApiCreatedUpdatedAtType & {
+    id: UUID;
+    name: string;
+    slug: string;
+    description: string | null;
+    photos: PhotoOutShortDto[];
+    groups: PriceGroupSimpleOutDto[];
+    price_tables?: TableType[];
+    page_data?: string;
+};
 
-export type priceVariantCreateInDtoType = {
-    name: string,
-    description?: string | null,
-    price: number,
-    price_formatter: priceFormattersType,
-}
+export type PriceCreateInDto = {
+    name: string;
+    description?: string;
+    groups: UUID[];
+    page_data?: string;
+    price_tables?: TableType[];
+};
 
-export type priceVariantUpdateInDtoType = Partial<priceVariantCreateInDtoType>
+export type PriceUpdateInDto = {
+    name?: string;
+    description?: string;
+    groups?: UUID[];
+    page_data?: string;
+    price_tables?: TableType[];
+};
 
-export type priceVariantsOutDtoType = {
-    id: string,
-    name: string,
-    description: string | null,
-    price: number,
-    price_formatter: priceFormattersType,
-}
-
-export type priceVariantOutDtoType = priceVariantsOutDtoType
-
-export type priceOutDtoType = {
-    id: string,
-    name: string,
-    description: string | null,
-    group: string | null,
-    price: number,
-    price_formatter: priceFormattersType,
-    variants: priceVariantsOutDtoType[],
-}
-
-export type priceGroupsOutDtoType = string[]
+export type PricePhotosUpdateInDto = {
+    photo_ids?: UUID[];
+    main?: UUID;
+};

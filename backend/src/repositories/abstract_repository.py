@@ -76,3 +76,35 @@ class AbstractRepository[E: Entity](ABC):
     async def bulk_delete(self, ids: Sequence[UUID]) -> None:
         stmt = delete(self.table).where(self.table.c.id.in_(ids))
         await self.session.execute(stmt)
+
+    async def get_by_slug(self, slug: str) -> E | None:
+        """Получить сущность по slug. Работает только для таблиц с колонкой slug."""
+        if "slug" not in self.table.c:
+            raise AttributeError(f"Table {self.table.name} does not have a 'slug' column")
+        stmt = select(self.table).where(self.table.c.slug == slug)
+        row = await self.session.execute(stmt)
+        mapping = row.mappings().first()
+        if mapping is None:
+            return None
+        return self.entity.model_validate(dict(mapping))
+
+    async def get_by_slug_or_id(self, slug_or_id: str | UUID) -> E | None:
+        """Получить по slug или UUID. Работает только для таблиц с колонкой slug."""
+        if isinstance(slug_or_id, UUID):
+            return await self.get_by_id(slug_or_id)
+        return await self.get_by_slug(slug_or_id)
+
+    async def find_by_slug(self, slug: str) -> E | None:
+        """Проверить существование slug. Работает только для таблиц с колонкой slug."""
+        return await self.get_by_slug(slug)
+
+    async def find_by_name(self, name: str) -> E | None:
+        """Проверить существование name. Работает только для таблиц с колонкой name."""
+        if "name" not in self.table.c:
+            raise AttributeError(f"Table {self.table.name} does not have a 'name' column")
+        stmt = select(self.table).where(self.table.c.name == name)
+        row = await self.session.execute(stmt)
+        mapping = row.mappings().first()
+        if mapping is None:
+            return None
+        return self.entity.model_validate(dict(mapping))

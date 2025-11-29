@@ -1,33 +1,112 @@
-import axios from "axios";
-import api from "@/api/base";
-import {loginCredentialsType} from "@/types/api/login";
-import { AuthResponsePayload, AuthStatus } from "@/types/api/auth";
+import { loginCredentialsType } from "@/types/api/login";
+import { AuthStatus } from "@/types/api/auth";
 
-const authApiLogin = async (
-    credentials: loginCredentialsType
+function resolveApiBaseUrl(): string {
+  const explicitUrl =
+    process.env.NEXT_PUBLIC_API_BASE_URL ?? 
+    process.env.NEXT_PUBLIC_BACKEND_URL ?? 
+    process.env.API_BASE_URL;
+  
+  if (explicitUrl) {
+    return explicitUrl;
+  }
+
+  if (typeof window !== "undefined") {
+    const { protocol, hostname, port } = window.location;
+
+    const configuredPort = process.env.NEXT_PUBLIC_API_PORT;
+    const backendPort =
+      configuredPort && configuredPort.trim() !== ""
+        ? configuredPort
+        : port && port !== "" && port !== "3000"
+          ? port
+          : "8001";
+
+    const normalizedPort =
+      (protocol === "http:" && backendPort === "80") ||
+      (protocol === "https:" && backendPort === "443")
+        ? ""
+        : `:${backendPort}`;
+
+    return `${protocol}//${hostname}${normalizedPort}/api`;
+  }
+
+  return "http://localhost:8001/api";
+}
+
+export const authApiLogin = async (
+  credentials: loginCredentialsType
 ): Promise<AuthStatus> => {
-    try {
-        const response = await api.post<AuthResponsePayload>(
-            "/auth/login",
-            {
-                username: credentials.username,
-                password: credentials.password
-            }
-        );
-        const status = response.data?.status;
+  try {
+    const apiBaseUrl = resolveApiBaseUrl();
+    const response = await fetch(`${apiBaseUrl}/auth/login`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({
+        username: credentials.username,
+        password: credentials.password,
+      }),
+    });
 
-        if (status === "ok" || status === "denied") {
-            return status;
-        }
-
-        return "error";
-    } catch (error) {
-        if (axios.isAxiosError(error) && error.response?.status === 401) {
-            return "denied";
-        }
-
-        return "error";
+    if (response.status === 401) {
+      return "denied";
     }
+
+    if (!response.ok) {
+      return "error";
+    }
+
+    const data = await response.json().catch(() => null);
+    const status = data?.status;
+
+    if (status === "ok" || status === "denied") {
+      return status;
+    }
+
+    return "error";
+  } catch {
+    return "error";
+  }
+};
+
+export const authApiRefresh = async (): Promise<boolean> => {
+  try {
+    const apiBaseUrl = resolveApiBaseUrl();
+    const response = await fetch(`${apiBaseUrl}/auth/refresh`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    });
+
+    return response.ok || response.status === 204;
+  } catch {
+    return false;
+  }
+};
+
+export const authApiLogout = async (): Promise<boolean> => {
+  try {
+    const apiBaseUrl = resolveApiBaseUrl();
+    const response = await fetch(`${apiBaseUrl}/auth/logout`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    });
+
+    return response.ok || response.status === 204;
+  } catch {
+    return false;
+  }
 };
 
 export default authApiLogin;

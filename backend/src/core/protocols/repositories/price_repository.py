@@ -1,47 +1,41 @@
-from typing import Protocol
+from typing import Literal, Protocol
 from uuid import UUID
 
-from core.entities import PaginatedEntities, Price, PriceVariant
+from core.entities.prices import Price, PriceGroup, PriceGroupsRelation, PricePhotos
 
 from .base_repository import BaseRepositoryProtocol
 
 
-class PriceRepositoryProtocol(BaseRepositoryProtocol[Price], Protocol):
-    async def get_all_prices(
+class PriceGroupRepositoryProtocol(BaseRepositoryProtocol[PriceGroup], Protocol):
+    async def find_by_name(self, name: str) -> PriceGroup | None: ...
+    async def get_filtered(
         self,
         *,
-        limit: int | None = None,
-        offset: int | None = None,
         name: str | None = None,
         description: str | None = None,
-        group: list[str] | None = None,
-        price_gt: int | None = None,
-        price_lt: int | None = None,
-        sort: list[str] | None = None,
-    ) -> PaginatedEntities[Price]: ...
-
-    """Получает все цены услуг c фильтрацией."""
-
-    async def get_by_unique(self, *, name: str, group: str | None) -> Price | None: ...
-
-    """Получает цену услуги по уникальному ключу."""
-
-    async def list_groups(self) -> list[str]: ...
-
-    """Получает все имеющиеся группы цен."""
+        sort: list[Literal["name", "-name"]] | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+    ) -> tuple[list[PriceGroup], int]: ...
 
 
-class PriceVariantRepositoryProtocol(BaseRepositoryProtocol[PriceVariant], Protocol):
-    async def get_all_price_variants(
+class PriceRepositoryProtocol(BaseRepositoryProtocol[Price], Protocol):
+    async def find_by_name(self, name: str) -> Price | None: ...
+    async def get_by_slug_or_id(self, slug_or_id: str) -> Price | None: ...
+    async def get_filtered(
         self,
         *,
-        price_ids: list[UUID] | None = None,
-    ) -> list[PriceVariant]: ...
+        name: str | list[str] | None = None,
+        description: str | None = None,
+        groups: str | list[str] | None = None,
+        sort: list[Literal["name", "-name"]] | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+    ) -> tuple[list[Price], int]: ...
+    async def get_price_groups(self, price_id: UUID) -> list[PriceGroupsRelation]: ...
+    async def set_price_groups(self, price_id: UUID, group_ids: list[UUID]) -> None: ...
+    async def get_price_photos(self, price_id: UUID) -> list[PricePhotos]: ...
+    async def set_price_photos(
+        self, price_id: UUID, photo_ids: list[UUID] | None = None, main_photo_id: UUID | None = None
+    ) -> None: ...
 
-    """Получает все варианты цен услуг c фильтрацией."""
-
-    async def get_by_unique(
-        self, *, name: str, price_id: UUID
-    ) -> PriceVariant | None: ...
-
-    """Получает вариант цены услуги по уникальному ключу."""

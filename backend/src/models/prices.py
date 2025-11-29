@@ -1,5 +1,5 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, Table, UniqueConstraint
-
+from sqlalchemy import Boolean, Column, ForeignKey, String, Table, Text, text
+from sqlalchemy.dialects.postgresql import JSONB
 from utils.basemodel import metadata, timestamp_columns, uuid_pk
 
 prices = Table(
@@ -8,22 +8,39 @@ prices = Table(
     uuid_pk(),
     *timestamp_columns(),
     Column("name", String(63), nullable=False, index=True),
-    Column("description", String(255), nullable=True),
-    Column("group", String(31), nullable=True),
-    Column("price", Integer(), nullable=False),
-    Column("price_formatter", String(7), nullable=False),
-    UniqueConstraint("name", "group", name="uq_name_group")
+    Column("description", String(511), nullable=True),
+    Column("page_data", Text(), nullable=False, default="<div></div>"),
+    Column("slug", String(63), nullable=False, index=True),
+    Column(
+        "price_tables",
+        JSONB,
+        nullable=False,
+        server_default=text("'[]'::jsonb"),
+    ),
 )
 
-price_variants = Table(
-    "price_variants",
+price_groups = Table(
+    "price_groups",
     metadata,
     uuid_pk(),
     *timestamp_columns(),
+    Column("name", String(63), nullable=False, index=True),
+    Column("description", String(511), nullable=True),
+)
+
+price_groups_relations = Table(
+    "price_groups_relations",
+    metadata,
+    uuid_pk(),
     Column("price_id", ForeignKey("prices.id", ondelete="CASCADE"), nullable=False),
-    Column("name", String(63), nullable=False),
-    Column("description", String(255), nullable=True),
-    Column("price", Integer(), nullable=False),
-    Column("price_formatter", String(7), nullable=False),
-    UniqueConstraint("name", "price_id", name="uq_name_price_id")
+    Column("group_id", ForeignKey("price_groups.id", ondelete="CASCADE"), nullable=False),
+)
+
+price_photos = Table(
+    "price_photos",
+    metadata,
+    uuid_pk(),
+    Column("price_id", ForeignKey("prices.id", ondelete="CASCADE"), nullable=False),
+    Column("photo_id", ForeignKey("photos.id", ondelete="CASCADE"), nullable=False),
+    Column("is_main", Boolean(), nullable=False, default=False),
 )

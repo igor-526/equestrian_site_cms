@@ -1,3 +1,9 @@
-from .price_repository import PriceRepositoryProtocol, PriceVariantRepositoryProtocol
+from .breed_repository import BreedRepositoryProtocol
+from .coat_color_repository import CoatColorRepositoryProtocol
+from .horse_owner_repository import HorseOwnerRepositoryProtocol
+from .horse_service_repository import HorseServiceRepositoryProtocol
+from .photo_repository import PhotoRepositoryProtocol
+from .price_repository import PriceGroupRepositoryProtocol, PriceRepositoryProtocol
+from .site_settings_repository import SiteSettingsRepositoryProtocol
 from .token_repository import TokenRepositoryProtocol
 from .user_repository import UserRepositoryProtocol

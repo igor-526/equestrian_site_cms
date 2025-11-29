@@ -1,210 +1,271 @@
-from collections import defaultdict
+from typing import Literal
 from uuid import UUID
 
-from core.entities import PaginatedEntities, Price, PriceVariant
+from core.entities.prices import Price, PriceGroup
 from core.exceptions.base import ClientError
-from core.protocols.repositories import (
+from core.protocols.repositories.price_repository import (
+    PriceGroupRepositoryProtocol,
     PriceRepositoryProtocol,
-    PriceVariantRepositoryProtocol,
 )
+from core.protocols.repositories.photo_repository import PhotoRepositoryProtocol
 from core.schemas.prices import (
-    PriceCreateInDto,
-    PriceOutDto,
-    PriceUpdateInDto,
-    PriceVariantCreateInDto,
-    PriceVariantOutDto,
-    PriceVariantUpdateInDto,
+    PriceCreateDto,
+    PriceGroupCreateDto,
+    PriceGroupUpdateDto,
+    PricePhotosUpdateDto,
+    PriceUpdateDto,
 )
+
+
+class PriceGroupService:
+    def __init__(self, price_group_repository: PriceGroupRepositoryProtocol):
+        self.price_group_repository = price_group_repository
+
+    async def _ensure_unique_name(self, name: str, exclude_id: UUID | None = None) -> str:
+        """Обеспечивает уникальность name."""
+        existing = await self.price_group_repository.find_by_name(name)
+        if existing is None or (exclude_id is not None and existing.id == exclude_id):
+            return name
+        raise ClientError(f"Группа с названием '{name}' уже существует")
+
+    async def create(self, data: PriceGroupCreateDto) -> PriceGroup:
+        """Создать новую группу."""
+        group_data = data.model_dump(exclude_none=True)
+        
+        # Проверяем уникальность name
+        await self._ensure_unique_name(group_data["name"])
+        
+        price_group = PriceGroup(**group_data)
+        return await self.price_group_repository.create(price_group)
+
+    async def update(self, id: UUID, data: PriceGroupUpdateDto) -> PriceGroup:
+        """Обновить группу."""
+        price_group = await self.price_group_repository.get_by_id(id)
+        if price_group is None:
+            raise ClientError("Группа не найдена")
+
+        update_data = data.model_dump(exclude_none=True)
+        
+        # Если обновляется name, проверяем уникальность
+        if "name" in update_data:
+            await self._ensure_unique_name(update_data["name"], exclude_id=price_group.id)
+
+        for key, value in update_data.items():
+            setattr(price_group, key, value)
+
+        return await self.price_group_repository.update(price_group)
+
+    async def get_by_id(self, id: UUID) -> PriceGroup | None:
+        """Получить группу по UUID."""
+        return await self.price_group_repository.get_by_id(id)
+
+    async def delete(self, id: UUID) -> None:
+        """Удалить группу."""
+        price_group = await self.price_group_repository.get_by_id(id)
+        if price_group is None:
+            raise ClientError("Группа не найдена")
+        await self.price_group_repository.delete(id)
+
+    async def get_filtered(
+        self,
+        *,
+        name: str | None = None,
+        description: str | None = None,
+        sort: list[Literal["name", "-name"]] | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+    ) -> tuple[list[PriceGroup], int]:
+        """Получить отфильтрованный список групп."""
+        return await self.price_group_repository.get_filtered(
+            name=name,
+            description=description,
+            sort=sort,
+            limit=limit,
+            offset=offset,
+        )
 
 
 class PriceService:
     def __init__(
         self,
         price_repository: PriceRepositoryProtocol,
-        price_variant_repository: PriceVariantRepositoryProtocol,
-    ) -> None:
+        price_group_repository: PriceGroupRepositoryProtocol,
+        photo_repository: PhotoRepositoryProtocol,
+    ):
         self.price_repository = price_repository
-        self.price_variant_repository = price_variant_repository
+        self.price_group_repository = price_group_repository
+        self.photo_repository = photo_repository
 
-    async def list_prices(
+    def _parse_slug_or_id(self, slug_or_id: str) -> str | UUID:
+        """Попытаться преобразовать строку в UUID, иначе вернуть как есть."""
+        try:
+            return UUID(slug_or_id)
+        except ValueError:
+            return slug_or_id
+
+    async def _ensure_unique_name(self, name: str, exclude_id: UUID | None = None) -> str:
+        """Обеспечивает уникальность name."""
+        existing = await self.price_repository.find_by_name(name)
+        if existing is None or (exclude_id is not None and existing.id == exclude_id):
+            return name
+        raise ClientError(f"Цена с названием '{name}' уже существует")
+
+    async def _ensure_unique_slug(self, slug: str, exclude_id: UUID | None = None) -> str:
+        """Обеспечивает уникальность slug."""
+        base_slug = slug
+        counter = 1
+        current_slug = base_slug
+
+        while True:
+            existing = await self.price_repository.get_by_slug_or_id(current_slug)
+            if existing is None or (exclude_id is not None and existing.id == exclude_id):
+                return current_slug
+            current_slug = f"{base_slug}-{counter}"
+            counter += 1
+
+    async def create(self, data: PriceCreateDto) -> Price:
+        """Создать новую цену."""
+        price_data = data.model_dump(exclude_none=True)
+        groups = price_data.pop("groups", [])
+        
+        # Проверяем уникальность name
+        await self._ensure_unique_name(price_data["name"])
+        
+        # Если slug не задан, генерируем из name
+        if "slug" not in price_data or price_data["slug"] is None:
+            from core.entities.base import _generate_slug
+            price_data["slug"] = _generate_slug(price_data["name"])
+        
+        # Обеспечиваем уникальность slug
+        price_data["slug"] = await self._ensure_unique_slug(price_data["slug"])
+        
+        # Устанавливаем page_data по умолчанию, если не задан
+        if "page_data" not in price_data or price_data["page_data"] is None:
+            price_data["page_data"] = "<div></div>"
+        
+        price = Price(**price_data)
+        price = await self.price_repository.create(price)
+        
+        # Устанавливаем связи с группами
+        if groups:
+            # Проверяем, что все группы существуют
+            for group_id in groups:
+                group = await self.price_group_repository.get_by_id(group_id)
+                if group is None:
+                    raise ClientError(f"Группа с ID '{group_id}' не найдена")
+            
+            await self.price_repository.set_price_groups(price.id, groups)
+        
+        return price
+
+    async def update(self, slug_or_id: str, data: PriceUpdateDto) -> Price:
+        """Обновить цену."""
+        parsed = self._parse_slug_or_id(slug_or_id)
+        price = await self.price_repository.get_by_slug_or_id(str(parsed))
+        if price is None:
+            raise ClientError("Цена не найдена")
+
+        update_data = data.model_dump(exclude_none=True)
+        groups = update_data.pop("groups", None)
+        
+        # Если обновляется name, проверяем уникальность
+        if "name" in update_data:
+            await self._ensure_unique_name(update_data["name"], exclude_id=price.id)
+        
+        # Если обновляется slug, проверяем уникальность
+        if "slug" in update_data:
+            update_data["slug"] = await self._ensure_unique_slug(
+                update_data["slug"], exclude_id=price.id
+            )
+        
+        # Если обновляется name и slug не задан, генерируем slug из name
+        if "name" in update_data and "slug" not in update_data:
+            from core.entities.base import _generate_slug
+            new_slug = _generate_slug(update_data["name"])
+            update_data["slug"] = await self._ensure_unique_slug(new_slug, exclude_id=price.id)
+
+        for key, value in update_data.items():
+            setattr(price, key, value)
+
+        price = await self.price_repository.update(price)
+        
+        # Обновляем связи с группами, если переданы
+        if groups is not None:
+            # Проверяем, что все группы существуют
+            for group_id in groups:
+                group = await self.price_group_repository.get_by_id(group_id)
+                if group is None:
+                    raise ClientError(f"Группа с ID '{group_id}' не найдена")
+            
+            await self.price_repository.set_price_groups(price.id, groups)
+        
+        return price
+
+    async def get_by_slug_or_id(self, slug_or_id: str) -> Price | None:
+        """Получить цену по slug или UUID."""
+        parsed = self._parse_slug_or_id(slug_or_id)
+        return await self.price_repository.get_by_slug_or_id(str(parsed))
+
+    async def delete(self, slug_or_id: str) -> None:
+        """Удалить цену."""
+        parsed = self._parse_slug_or_id(slug_or_id)
+        price = await self.price_repository.get_by_slug_or_id(str(parsed))
+        if price is None:
+            raise ClientError("Цена не найдена")
+        await self.price_repository.delete(price.id)
+
+    async def get_filtered(
         self,
         *,
-        limit: int | None,
-        offset: int | None,
-        name: str | None,
-        description: str | None,
-        group: list[str] | None,
-        price_gt: int | None,
-        price_lt: int | None,
-        sort: list[str] | None,
-    ) -> PaginatedEntities[PriceOutDto]:
-        prices = await self.price_repository.get_all_prices(
-            limit=limit,
-            offset=offset,
+        name: str | list[str] | None = None,
+        description: str | None = None,
+        groups: str | list[str] | None = None,
+        sort: list[Literal["name", "-name"]] | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+    ) -> tuple[list[Price], int]:
+        """Получить отфильтрованный список цен."""
+        return await self.price_repository.get_filtered(
             name=name,
             description=description,
-            group=group,
-            price_gt=price_gt,
-            price_lt=price_lt,
+            groups=groups,
             sort=sort,
-        )
-        price_ids = [price.id for price in prices.items]
-        variants = await self.price_variant_repository.get_all_price_variants(
-            price_ids=price_ids if price_ids else None
+            limit=limit,
+            offset=offset,
         )
 
-        variants_map: dict[UUID, list[PriceVariantOutDto]] = defaultdict(list)
-        for variant in variants:
-            variants_map[variant.price_id].append(
-                PriceVariantOutDto.model_validate(variant)
-            )
-
-        result: list[PriceOutDto] = []
-        for price in prices.items:
-            price_out = PriceOutDto.model_validate(price)
-            price_out.variants = variants_map.get(price.id, [])
-            result.append(price_out)
-        return PaginatedEntities(items=result, total=prices.total)
-
-    async def create_price(self, *, data: PriceCreateInDto) -> PriceOutDto:
-        if await self.price_repository.get_by_unique(name=data.name, group=data.group):
-            raise ClientError("Цена с таким названием и группой уже существует")
-
-        price_payload = data.model_dump(exclude={"variants"})
-        price_entity = Price(**price_payload)
-        created_price = await self.price_repository.create(price_entity)
-
-        created_variants: list[PriceVariantOutDto] = []
-        for variant in data.variants or []:
-            if await self.price_variant_repository.get_by_unique(
-                name=variant.name, price_id=created_price.id
-            ):
-                raise ClientError(
-                    f"Вариант цены с названием '{variant.name}' уже существует"
-                )
-            variant_entity = PriceVariant(
-                price_id=created_price.id,
-                **variant.model_dump(),
-            )
-            created_variant = await self.price_variant_repository.create(variant_entity)
-            created_variants.append(PriceVariantOutDto.model_validate(created_variant))
-
-        price_out = PriceOutDto.model_validate(created_price)
-        price_out.variants = created_variants
-        return price_out
-
-    async def update_price(
-        self,
-        *,
-        price_id: UUID,
-        data: PriceUpdateInDto,
-    ) -> PriceOutDto:
-        update_data = data.model_dump(exclude_unset=True)
-        if not update_data:
-            raise ClientError("Нет данных для обновления цены")
-
-        price = await self.price_repository.get_by_id(price_id)
-        if price is None:
-            raise ClientError("Цена не найдена")
-
-        name = update_data.get("name", price.name)
-        group_value = update_data.get("group", price.group)
-        if name != price.name or group_value != price.group:
-            existing = await self.price_repository.get_by_unique(
-                name=name, group=group_value
-            )
-            if existing and existing.id != price_id:
-                raise ClientError("Цена с таким названием и группой уже существует")
-
-        updated_price = price.model_copy(update=update_data)
-        saved_price = await self.price_repository.update(updated_price)
-
-        variants = await self.price_variant_repository.get_all_price_variants(
-            price_ids=[price_id]
-        )
-
-        price_out = PriceOutDto.model_validate(saved_price)
-        price_out.variants = [
-            PriceVariantOutDto.model_validate(variant) for variant in variants
-        ]
-        return price_out
-
-    async def delete_price(self, *, price_id: UUID) -> None:
-        price = await self.price_repository.get_by_id(price_id)
-        if price is None:
-            raise ClientError("Цена не найдена")
-        await self.price_repository.delete(price_id)
-
-    async def add_price_variant(
-        self,
-        *,
-        price_id: UUID,
-        data: PriceVariantCreateInDto,
-    ) -> PriceVariantOutDto:
-        price = await self.price_repository.get_by_id(price_id)
-        if price is None:
-            raise ClientError("Цена не найдена")
-
-        if await self.price_variant_repository.get_by_unique(
-            name=data.name, price_id=price_id
-        ):
-            raise ClientError(f"Вариант цены с названием '{data.name}' уже существует")
-
-        variant_entity = PriceVariant(
-            price_id=price_id,
-            **data.model_dump(),
-        )
-        created_variant = await self.price_variant_repository.create(variant_entity)
-        return PriceVariantOutDto.model_validate(created_variant)
-
-    async def update_price_variant(
-        self,
-        *,
-        price_id: UUID,
-        price_variant_id: UUID,
-        data: PriceVariantUpdateInDto,
-    ) -> PriceVariantOutDto:
-        update_data = data.model_dump(exclude_unset=True)
-        if not update_data:
-            raise ClientError("Нет данных для обновления варианта цены")
-
-        price = await self.price_repository.get_by_id(price_id)
-        if price is None:
-            raise ClientError("Цена не найдена")
-
-        variant = await self.price_variant_repository.get_by_id(price_variant_id)
-        if variant is None or variant.price_id != price_id:
-            raise ClientError("Вариант цены не найден")
-
-        new_name = update_data.get("name", variant.name)
-        if new_name != variant.name:
-            existing = await self.price_variant_repository.get_by_unique(
-                name=new_name, price_id=price_id
-            )
-            if existing and existing.id != price_variant_id:
-                raise ClientError(
-                    f"Вариант цены с названием '{new_name}' уже существует"
-                )
-
-        updated_variant = variant.model_copy(update=update_data)
-        saved_variant = await self.price_variant_repository.update(updated_variant)
-        return PriceVariantOutDto.model_validate(saved_variant)
-
-    async def delete_price_variant(
-        self,
-        *,
-        price_id: UUID,
-        price_variant_id: UUID,
+    async def update_price_photos(
+        self, slug_or_id: str, data: PricePhotosUpdateDto
     ) -> None:
-        price = await self.price_repository.get_by_id(price_id)
+        """Обновить фотографии цены."""
+        parsed = self._parse_slug_or_id(slug_or_id)
+        price = await self.price_repository.get_by_slug_or_id(str(parsed))
         if price is None:
             raise ClientError("Цена не найдена")
 
-        variant = await self.price_variant_repository.get_by_id(price_variant_id)
-        if variant is None or variant.price_id != price_id:
-            raise ClientError("Вариант цены не найден")
+        photo_ids = data.photo_ids
+        main_photo_id = data.main
 
-        await self.price_variant_repository.delete(price_variant_id)
+        # Если передан main_photo_id, проверяем, что фотография существует
+        if main_photo_id is not None:
+            photo = await self.photo_repository.get_by_id(main_photo_id)
+            if photo is None:
+                raise ClientError(f"Фотография с ID '{main_photo_id}' не найдена")
+            
+            # Если передан photo_ids, проверяем, что main_photo_id входит в список
+            if photo_ids is not None and main_photo_id not in photo_ids:
+                raise ClientError("Главная фотография должна входить в список фотографий")
 
-    async def list_price_groups(self) -> list[str]:
-        return await self.price_repository.list_groups()
+        # Если передан photo_ids, проверяем, что все фотографии существуют
+        if photo_ids is not None:
+            for photo_id in photo_ids:
+                photo = await self.photo_repository.get_by_id(photo_id)
+                if photo is None:
+                    raise ClientError(f"Фотография с ID '{photo_id}' не найдена")
+
+        await self.price_repository.set_price_photos(
+            price.id, photo_ids=photo_ids, main_photo_id=main_photo_id
+        )
+
+
+

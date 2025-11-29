@@ -24,37 +24,37 @@ const BaseLayout = ({ children }: { children: React.ReactNode }) => {
             key: 'main',
             label: 'Дэшборд',
             icon: <DashboardIcon size={18} />,
-            onClick: () => { router.push('/') }
+            onClick: () => { router.push('/dashboard/') }
         },
         {
             key: 'horses',
             label: 'Лошади',
             icon: <HorsesIcon size={18} />,
-            onClick: () => { router.push('/horses') }
+            onClick: () => { router.push('/horses/') }
         },
         {
             key: 'info',
             label: 'Информация',
             icon: <InfoIcon size={18} />,
-            onClick: () => { router.push('/info') }
+            onClick: () => { router.push('/info/') }
         },
         {
             key: 'gallery',
             label: 'Галерея',
             icon: <GalleryIcon size={18} />,
-            onClick: () => { router.push('/gallery') }
+            onClick: () => { router.push('/gallery/') }
         },
         {
             key: 'prices',
             label: 'Услуги и цены',
             icon: <ServicesIcon size={18} />,
-            onClick: () => { router.push('/prices') }
+            onClick: () => { router.push('/prices/') }
         },
         {
             key: 'logout',
             label: 'Выйти',
             icon: <LogoutIcon size={18} />,
-            onClick: () => { router.push('/login') }
+            onClick: () => { router.push('/login/') }
         },
     ]
 

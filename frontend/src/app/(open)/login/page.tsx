@@ -17,7 +17,7 @@ const LoginPage = () => {
             const loginStatus = await authApiLogin(loginForm);
             switch (loginStatus) {
                 case "ok":
-                    router.push("/dashboard/");
+                    router.push("/dashboard");
                     return
                 case "denied":
                     setShowError("Неверный логин или пароль");

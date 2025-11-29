@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
 import { Button, Layout, Menu } from 'antd';
 import { useRouter, usePathname } from "next/navigation";
@@ -20,35 +20,11 @@ const BaseLayout = ({ children }: { children: React.ReactNode }) => {
     const router = useRouter();
     const pathname = usePathname();
 
-    // Перехватываем события popstate для обработки навигации
-    useEffect(() => {
-        const handlePopState = (event: PopStateEvent) => {
-            // При навигации назад/вперед обновляем роутер
-            router.replace(window.location.pathname);
-        };
 
-        window.addEventListener('popstate', handlePopState);
-        return () => window.removeEventListener('popstate', handlePopState);
-    }, [router]);
-
-    const handleMenuClick = (path: string, e?: React.MouseEvent) => {
-        if (e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-        
-        // При статическом экспорте Next.js может делать полную перезагрузку
-        // Используем комбинацию History API и router для клиентской навигации
-        if (typeof window !== 'undefined' && pathname !== path) {
-            // Сначала обновляем состояние Next.js роутера
-            router.replace(path, { scroll: false });
-            // Затем обновляем URL без перезагрузки страницы
-            // Используем setTimeout чтобы дать роутеру время на обновление
-            setTimeout(() => {
-                if (window.location.pathname !== path) {
-                    window.history.replaceState({ path }, '', path);
-                }
-            }, 0);
+    const handleMenuClick = (path: string) => {
+        // Обычный клиентский роутинг Next.js
+        if (pathname !== path) {
+            router.push(path);
         }
     };
 
@@ -57,37 +33,37 @@ const BaseLayout = ({ children }: { children: React.ReactNode }) => {
             key: 'main',
             label: 'Дэшборд',
             icon: <DashboardIcon size={18} />,
-            onClick: (e: any) => { handleMenuClick('/dashboard/', e) }
+            onClick: () => { handleMenuClick('/dashboard') }
         },
         {
             key: 'horses',
             label: 'Лошади',
             icon: <HorsesIcon size={18} />,
-            onClick: (e: any) => { handleMenuClick('/horses/', e) }
+            onClick: () => { handleMenuClick('/horses') }
         },
         {
             key: 'info',
             label: 'Информация',
             icon: <InfoIcon size={18} />,
-            onClick: (e: any) => { handleMenuClick('/info/', e) }
+            onClick: () => { handleMenuClick('/info') }
         },
         {
             key: 'gallery',
             label: 'Галерея',
             icon: <GalleryIcon size={18} />,
-            onClick: (e: any) => { handleMenuClick('/gallery/', e) }
+            onClick: () => { handleMenuClick('/gallery') }
         },
         {
             key: 'prices',
             label: 'Услуги и цены',
             icon: <ServicesIcon size={18} />,
-            onClick: (e: any) => { handleMenuClick('/prices/', e) }
+            onClick: () => { handleMenuClick('/prices') }
         },
         {
             key: 'logout',
             label: 'Выйти',
             icon: <LogoutIcon size={18} />,
-            onClick: (e: any) => { handleMenuClick('/login/', e) }
+            onClick: () => { handleMenuClick('/login') }
         },
     ]
 

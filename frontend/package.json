@@ -6,8 +6,7 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint",
-    "postbuild": "node scripts/export-static.mjs"
+    "lint": "eslint"
   },
   "dependencies": {
     "@ant-design/icons": "^6.1.0",

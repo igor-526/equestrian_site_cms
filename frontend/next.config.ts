@@ -1,8 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: "export",
-  trailingSlash: true,
+  // Убираем output: "export" для нормальной работы клиентского роутинга
+  // trailingSlash: true, // Можно оставить, если нужно
   eslint: {
     ignoreDuringBuilds: true,
   },

@@ -1,9 +1,9 @@
 "use client"
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
 import { Button, Layout, Menu } from 'antd';
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import {
     DashboardIcon,
     ServicesIcon,
@@ -18,45 +18,88 @@ const { Header, Sider, Content } = Layout;
 const BaseLayout = ({ children }: { children: React.ReactNode }) => {
     const [collapsed, setCollapsed] = useState(true)
     const router = useRouter();
+    const pathname = usePathname();
+
+    // Перехватываем события popstate для обработки навигации
+    useEffect(() => {
+        const handlePopState = (event: PopStateEvent) => {
+            // При навигации назад/вперед обновляем роутер
+            router.replace(window.location.pathname);
+        };
+
+        window.addEventListener('popstate', handlePopState);
+        return () => window.removeEventListener('popstate', handlePopState);
+    }, [router]);
+
+    const handleMenuClick = (path: string, e?: React.MouseEvent) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        // При статическом экспорте Next.js может делать полную перезагрузку
+        // Используем комбинацию History API и router для клиентской навигации
+        if (typeof window !== 'undefined' && pathname !== path) {
+            // Сначала обновляем состояние Next.js роутера
+            router.replace(path, { scroll: false });
+            // Затем обновляем URL без перезагрузки страницы
+            // Используем setTimeout чтобы дать роутеру время на обновление
+            setTimeout(() => {
+                if (window.location.pathname !== path) {
+                    window.history.replaceState({ path }, '', path);
+                }
+            }, 0);
+        }
+    };
 
     const items = [
         {
             key: 'main',
             label: 'Дэшборд',
             icon: <DashboardIcon size={18} />,
-            onClick: () => { router.push('/dashboard/') }
+            onClick: (e: any) => { handleMenuClick('/dashboard/', e) }
         },
         {
             key: 'horses',
             label: 'Лошади',
             icon: <HorsesIcon size={18} />,
-            onClick: () => { router.push('/horses/') }
+            onClick: (e: any) => { handleMenuClick('/horses/', e) }
         },
         {
             key: 'info',
             label: 'Информация',
             icon: <InfoIcon size={18} />,
-            onClick: () => { router.push('/info/') }
+            onClick: (e: any) => { handleMenuClick('/info/', e) }
         },
         {
             key: 'gallery',
             label: 'Галерея',
             icon: <GalleryIcon size={18} />,
-            onClick: () => { router.push('/gallery/') }
+            onClick: (e: any) => { handleMenuClick('/gallery/', e) }
         },
         {
             key: 'prices',
             label: 'Услуги и цены',
             icon: <ServicesIcon size={18} />,
-            onClick: () => { router.push('/prices/') }
+            onClick: (e: any) => { handleMenuClick('/prices/', e) }
         },
         {
             key: 'logout',
             label: 'Выйти',
             icon: <LogoutIcon size={18} />,
-            onClick: () => { router.push('/login/') }
+            onClick: (e: any) => { handleMenuClick('/login/', e) }
         },
     ]
+
+    // Определяем активный ключ на основе текущего пути
+    const getActiveKey = () => {
+        if (pathname?.startsWith('/dashboard')) return 'main';
+        if (pathname?.startsWith('/horses')) return 'horses';
+        if (pathname?.startsWith('/info')) return 'info';
+        if (pathname?.startsWith('/gallery')) return 'gallery';
+        if (pathname?.startsWith('/prices')) return 'prices';
+        return 'main';
+    };
 
     return (
         <Layout className="h-screen">
@@ -69,7 +112,7 @@ const BaseLayout = ({ children }: { children: React.ReactNode }) => {
                 <Menu
                     theme="dark"
                     mode="vertical"
-                    defaultSelectedKeys={['main']}
+                    selectedKeys={[getActiveKey()]}
                     items={items}
                 />
             </Sider>

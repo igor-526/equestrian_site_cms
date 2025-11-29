@@ -37,7 +37,9 @@ export function addQueryParamsToUrl<T extends Record<string, unknown>>(
 
 function resolveApiBaseUrl() {
   const explicitUrl =
-    process.env.NEXT_PUBLIC_API_BASE_URL ?? process.env.API_BASE_URL;
+    process.env.NEXT_PUBLIC_API_BASE_URL ?? 
+    process.env.NEXT_PUBLIC_BACKEND_URL ?? 
+    process.env.API_BASE_URL;
   if (explicitUrl) {
     return explicitUrl;
   }

@@ -4,6 +4,7 @@ import { Button, Input, Modal, Popconfirm } from "antd";
 import TextArea from "antd/es/input/TextArea";
 import { UUID } from "crypto";
 import React, { useEffect, useState } from "react";
+import { PRICE_PAGE_SCOPES_ACTIONS, usePricePageActionScopes } from "../../hooks/usePriceScopes";
 
 export type PriceGroupModalProps = {
     open: boolean;
@@ -26,7 +27,7 @@ export const PriceGroupModal: React.FC<PriceGroupModalProps> = ({
     validationErrors,
     onResetValidation
 }) => {
-
+    const { hasPermission } = usePricePageActionScopes();
     const [name, setName] = useState<string>('');
     const [description, setDescription] = useState<string>('');
 
@@ -49,50 +50,54 @@ export const PriceGroupModal: React.FC<PriceGroupModalProps> = ({
         </Button>
     ]
 
+    const isDeleteButtonAvailable = hasPermission(PRICE_PAGE_SCOPES_ACTIONS.PRICE_GROUP_DELETE);
+    const isUpdateButtonAvailable = hasPermission(PRICE_PAGE_SCOPES_ACTIONS.PRICE_GROUP_UPDATE);
+    const isAddButtonAvailable = hasPermission(PRICE_PAGE_SCOPES_ACTIONS.PRICE_GROUP_CREATE);
+    const isNameFieldDisabled = !hasPermission(PRICE_PAGE_SCOPES_ACTIONS.PRICE_GROUP_UPDATE_NAME);
+    const isDescriptionFieldDisabled = !hasPermission(PRICE_PAGE_SCOPES_ACTIONS.PRICE_GROUP_UPDATE_DESCRIPTION);
+
     if (selectedPriceGroup) {
-        footer.push(
-            <Popconfirm
-            key="deleteConfirm"
-                title="Удалить группу услуг"
-                description="Вы уверены, что хотите удалить эту группу услуг?"
-                okText="Да"
-                okType="danger"
-                cancelText="Нет"
-                onConfirm={() => onDelete(selectedPriceGroup.id)}
-            >
+        if (isDeleteButtonAvailable) {
+            footer.push(
+                <Popconfirm
+                    key="deleteConfirm"
+                    title="Удалить группу услуг"
+                    description="Вы уверены, что хотите удалить эту группу услуг?"
+                    okText="Да"
+                    okType="danger"
+                    cancelText="Нет"
+                    onConfirm={() => onDelete(selectedPriceGroup.id)}
+                >
+                    <Button
+                        key="delete"
+                        color="danger"
+                        variant="outlined">
+                        <DeleteOutlined />Удалить
+                    </Button>
+                </Popconfirm>
+
+            );
+        }
+        if (isUpdateButtonAvailable) {
+            footer.push(
                 <Button
-                key="delete"
-                color="danger"
-                variant="outlined">
-                    <DeleteOutlined />Удалить
+                    key="change"
+                    type="primary"
+                    onClick={() => onUpdate(selectedPriceGroup.id, { name: name, description: description })}>
+                    <EditOutlined />Изменить
                 </Button>
-            </Popconfirm>
-
-        );
-        footer.push(
-            <Button
-                key="change"
-                type="primary"
-                onClick={() => onUpdate(selectedPriceGroup.id, { name: name, description: description })}>
-                <EditOutlined />Изменить
-            </Button>
-        );
+            );
+        }
     } else {
-        footer.push(
-            <Button
-            key="add"
-            type="primary"
-            onClick={() => onCreate({ name: name, description: description })}>
-                <PlusOutlined />Добавить
-            </Button>
-        );
-    }
-
-    const handlePressEnter = () => {
-        if (selectedPriceGroup) {
-            onUpdate(selectedPriceGroup.id, { name: name, description: description });
-        } else {
-            onCreate({ name: name, description: description });
+        if (isAddButtonAvailable) {
+            footer.push(
+                <Button
+                    key="add"
+                    type="primary"
+                    onClick={() => onCreate({ name: name, description: description })}>
+                    <PlusOutlined />Добавить
+                </Button>
+            );
         }
     }
 
@@ -118,8 +123,8 @@ export const PriceGroupModal: React.FC<PriceGroupModalProps> = ({
                     value={name}
                     onChange={(e) => handleInput(setName, e.target.value)}
                     maxLength={63}
-                    onPressEnter={handlePressEnter}
                     allowClear={true}
+                    disabled={isNameFieldDisabled}
                 />
 
                 {validationErrors.hasOwnProperty('name') ? (
@@ -138,8 +143,8 @@ export const PriceGroupModal: React.FC<PriceGroupModalProps> = ({
                     value={description}
                     onChange={(e) => handleInput(setDescription, e.target.value)}
                     maxLength={511}
-                    onPressEnter={handlePressEnter}
                     allowClear={true}
+                    disabled={isDescriptionFieldDisabled}
                 />
                 {validationErrors.hasOwnProperty('description') ? (
                     <div className="text-sm text-red-500">{validationErrors.description.join('\n')}</div>

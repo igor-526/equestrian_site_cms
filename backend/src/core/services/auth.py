@@ -26,7 +26,13 @@ class AuthService:
         if not user:
             raise InvalidCredentials("Пользователь не найден")
 
-        return UserOutDto.model_validate(user)
+        # Получаем группы доступа
+        scopes = await self.user_repository.get_user_scopes(user.id)
+        
+        user_dict = user.model_dump()
+        user_dict["scopes"] = scopes
+        
+        return UserOutDto.model_validate(user_dict)
 
     async def register(self, data: RegisterData) -> UserOutDto:
         if await self.user_repository.get_by_username(username=data.username):

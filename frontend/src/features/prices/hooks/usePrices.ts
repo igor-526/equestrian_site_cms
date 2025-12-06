@@ -88,7 +88,6 @@ export const usePrices = () => {
         if (response.status === "ok") {
             setPrices(response?.data?.items || []);
             setPricesTotal(response?.data?.total || 0);
-            console.log(response?.data?.items);
         } else if (response.status === "error") {
             toast.error({
                 title: "Ошибка",

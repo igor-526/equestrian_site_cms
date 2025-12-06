@@ -1,3 +1,4 @@
+import { trimText } from "@/lib";
 import { PriceGroupSimpleOutDto } from "@/types/api/priceGroups";
 import { PriceListQueryParams } from "@/types/api/prices";
 import { PriceOutDto } from "@/types/api/prices";
@@ -70,7 +71,7 @@ export const PricesTable: React.FC<PricesTableProps> = ({
             key: 'name',
             dataIndex: 'name',
             sorter: true,
-            render: (name: string) => <span>{name}</span>,
+            render: (name: string) => <span>{trimText(name, 40)}</span>,
             filterIcon: <SearchOutlined style={{ color: filters.name ? '#1677ff' : undefined }} />,
             filterDropdown: <>
                 <div style={{ padding: 8 }}>
@@ -85,7 +86,7 @@ export const PricesTable: React.FC<PricesTableProps> = ({
             title: 'Описание',
             key: 'description',
             dataIndex: 'description',
-            render: (description: string | null) => <span>{description}</span>,
+            render: (description: string | null) => <span>{trimText(description ?? "", 40)}</span>,
             filterIcon: <SearchOutlined style={{ color: filters.description ? '#1677ff' : undefined }} />,
             filterDropdown: <>
                 <div style={{ padding: 8 }}>
@@ -100,7 +101,7 @@ export const PricesTable: React.FC<PricesTableProps> = ({
             title: 'Путь',
             key: 'slug',
             dataIndex: 'slug',
-            render: (slug: string) => <span>{slug}</span>,
+            render: (slug: string) => <span className="text-blue-900 text-sm">{trimText(slug, 40)}</span>,
         },
         {
             title: 'Действия',

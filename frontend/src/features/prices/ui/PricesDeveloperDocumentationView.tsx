@@ -1,12 +1,12 @@
 import React from "react";
-import { PricesTabs } from "./PricesTabs";
+import { PricesTabs, PricesTabsEnum } from "./PricesTabs";
 
-export type DocumentationViewProps = {
-    activeTab: string;
-    setActiveTab: (tab: string) => void;
+export type PricesDeveloperDocumentationViewProps = {
+    activeTab: PricesTabsEnum;
+    setActiveTab: (tab: PricesTabsEnum) => void;
 };
 
-export const DocumentationView: React.FC<DocumentationViewProps> = ({
+export const PricesDeveloperDocumentationView: React.FC<PricesDeveloperDocumentationViewProps> = ({
     activeTab,
     setActiveTab,
 }) => {
@@ -215,7 +215,12 @@ export const DocumentationView: React.FC<DocumentationViewProps> = ({
           "name": "Абонементы"
         }
       ],
-      "price_tables": [],
+      "price_tables": [
+        {
+          "columns": [...],
+          "rows": [...]
+        }
+      ],
       "page_data": "<div></div>",
       "created_at": "2024-01-01T00:00:00",
       "updated_at": "2024-01-01T00:00:00"
@@ -229,7 +234,9 @@ export const DocumentationView: React.FC<DocumentationViewProps> = ({
                                     <div className="bg-blue-50 p-3 rounded border-l-4 border-blue-400">
                                         <p className="text-blue-800 text-sm">
                                             <strong>Важно:</strong> В ответе всегда включаются поля <code className="bg-blue-100 px-1 rounded">price_tables</code> и <code className="bg-blue-100 px-1 rounded">page_data</code>. 
-                                            Поле <code className="bg-blue-100 px-1 rounded">page_data</code> в списке услуг всегда содержит пустой HTML-контейнер <code className="bg-blue-100 px-1 rounded">&lt;div&gt;&lt;/div&gt;</code>.
+                                            Поле <code className="bg-blue-100 px-1 rounded">price_tables</code> содержит массив таблиц цен услуги (может быть пустым массивом <code className="bg-blue-100 px-1 rounded">[]</code>, если таблиц нет, или содержать реальные таблицы). 
+                                            Поле <code className="bg-blue-100 px-1 rounded">page_data</code> содержит HTML-контент страницы услуги из базы данных (по умолчанию <code className="bg-blue-100 px-1 rounded">&lt;div&gt;&lt;/div&gt;</code>, если контент не задан). 
+                                            Структура таблиц описана в разделе 5.
                                         </p>
                                     </div>
                                 </div>
@@ -248,13 +255,13 @@ export const DocumentationView: React.FC<DocumentationViewProps> = ({
                                     <div>
                                         <strong>Параметры запроса (query parameters):</strong>
                                         <ul className="list-disc list-inside space-y-1 ml-4 mt-2">
-                                            <li><code className="bg-gray-200 px-1 rounded">page_data</code> (boolean, опционально, по умолчанию false) - Включить HTML-контент страницы в ответ</li>
+                                            <li><code className="bg-gray-200 px-1 rounded">page_data</code> (boolean, опционально, по умолчанию false) - Параметр для обратной совместимости (не влияет на ответ, так как <code className="bg-gray-200 px-1 rounded">page_data</code> всегда включен в ответ)</li>
                                         </ul>
                                     </div>
 
                                     <div>
                                         <strong>Формат ответа:</strong>
-                                        <p className="text-sm text-gray-600 mb-2">Ответ всегда включает <code className="bg-gray-200 px-1 rounded">price_tables</code>. Поле <code className="bg-gray-200 px-1 rounded">page_data</code> включается только при <code className="bg-gray-200 px-1 rounded">page_data=true</code>. Структура таблиц описана в разделе 5.</p>
+                                        <p className="text-sm text-gray-600 mb-2">Ответ всегда включает <code className="bg-gray-200 px-1 rounded">price_tables</code> и <code className="bg-gray-200 px-1 rounded">page_data</code>. Поле <code className="bg-gray-200 px-1 rounded">page_data</code> содержит HTML-контент страницы услуги из базы данных (по умолчанию <code className="bg-gray-200 px-1 rounded">&lt;div&gt;&lt;/div&gt;</code>, если контент не задан). Структура таблиц описана в разделе 5.</p>
                                         <pre className="bg-gray-800 text-green-400 p-4 rounded mt-2 overflow-x-auto text-xs">
 {`{
   "id": "uuid",
@@ -334,27 +341,35 @@ export const DocumentationView: React.FC<DocumentationViewProps> = ({
           "name": "Абонементы"
         }
       ],
-      "price_tables": [],
+      "price_tables": [
+        {
+          "columns": [...],
+          "rows": [...]
+        }
+      ],
       "page_data": "<div></div>",
       "created_at": "2024-01-01T00:00:00",
       "updated_at": null
     }
   ],
   "total": 1
-}`}
+}
+
+Примечание: price_tables всегда включены в ответ (может быть пустым массивом [] или содержать таблицы)`}
                                 </pre>
                             </div>
 
                             <div className="bg-gray-50 p-5 rounded-lg">
-                                <h3 className="text-lg font-semibold mb-3">Пример 3: Получить услугу по slug с полными данными (page_data и tables)</h3>
+                                <h3 className="text-lg font-semibold mb-3">Пример 3: Получить услугу по slug с полными данными</h3>
                                 <pre className="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto text-xs">
-{`GET /api/prices/abonement-na-mesyac?page_data=true
+{`GET /api/prices/abonement-na-mesyac
 
-Ответ включает:
+Ответ всегда включает:
 - Все базовые поля услуги
 - price_tables (массив таблиц с ценами, всегда включен)
-- page_data (HTML-контент, включен при page_data=true)
-`}
+- page_data (HTML-контент страницы, всегда включен)
+
+Примечание: price_tables и page_data всегда включены в ответ для этого метода, независимо от параметров запроса`}
                                 </pre>
                             </div>
 
@@ -691,8 +706,8 @@ if (price.price_tables && price.price_tables.length > 0) {
                             <p className="text-green-800">
                                 Данная документация описывает все доступные GET методы API для работы с ценами и услугами конюшни. 
                                 Все методы возвращают данные в формате JSON. Используйте фильтры и параметры запросов для получения 
-                                именно тех данных, которые вам нужны. Помните, что <code className="bg-green-100 px-1 rounded">price_tables</code> всегда включены в ответ, 
-                                а для получения HTML-контента страницы необходимо использовать параметр <code className="bg-green-100 px-1 rounded">page_data=true</code>.
+                                именно тех данных, которые вам нужны. Помните, что <code className="bg-green-100 px-1 rounded">price_tables</code> и <code className="bg-green-100 px-1 rounded">page_data</code> всегда включены в ответ 
+                                для методов получения списка услуг (<code className="bg-green-100 px-1 rounded">GET /api/prices</code>) и получения услуги по slug/ID (<code className="bg-green-100 px-1 rounded">GET /api/prices/{`{slug_or_id}`}</code>).
                             </p>
                         </div>
                     </section>

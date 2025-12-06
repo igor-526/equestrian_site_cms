@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { PricesHeader } from "@/features/prices/ui/PricesHeader";
 import { usePrices } from "@/features/prices/hooks/usePrices";
 import { PricesGroupsTable } from "@/features/prices/ui/PriceGroup/PricesGroupsTable";
@@ -12,11 +12,14 @@ import { PricesTable } from "@/features/prices/ui/Price/PricesTable";
 import { PriceModal } from "@/features/prices/ui/Price/PriceModal";
 import { PriceTableModal } from "@/features/prices/ui/Price/PriceTableModal";
 import { TableType } from "@/types/api/table";
-import { DocumentationView } from "@/features/prices/ui/DocumentationView";
+import { PricesDeveloperDocumentationView } from "@/features/prices/ui/PricesDeveloperDocumentationView";
+import { PricesUserDocumentationView } from "@/features/prices/ui/PricesUserDocumentationView";
+import { PricesTabsEnum } from "@/features/prices/ui/PricesTabs";
+import { usePricePageActionScopes } from "@/features/prices/hooks/usePriceScopes";
 
 
 export default function PricesPage() {
-    const [activeTab, setActiveTab] = useState<string>('groups');
+    const [activeTab, setActiveTab] = useState<PricesTabsEnum>(PricesTabsEnum.PRICES);
     const [priceGroupModalOpen, setPriceGroupModalOpen] = useState<boolean>(false);
     const [selectedPriceGroup, setSelectedPriceGroup] = useState<PriceGroupOutDto | null>(null);
     const [priceModalOpen, setPriceModalOpen] = useState<boolean>(false);
@@ -24,7 +27,7 @@ export default function PricesPage() {
     const [priceTableModalOpen, setPriceTableModalOpen] = useState<boolean>(false);
     const [pricePhotosModalOpen, setPricePhotosModalOpen] = useState<boolean>(false);
     const [pricePageModalOpen, setPricePageModalOpen] = useState<boolean>(false);
-    
+
     const {
         priceGroups,
         priceGroupsTotal,
@@ -54,6 +57,10 @@ export default function PricesPage() {
         loadPriceDetail,
     } = usePrices();
 
+    const {
+        hasPermission,
+    } = usePricePageActionScopes();
+
     const filtersElements = (
         <PricesHeader
             activeTab={activeTab}
@@ -68,6 +75,7 @@ export default function PricesPage() {
             priceTotal={pricesTotal}
             priceFilters={pricesFilters}
             setPriceFilters={setPricesFilters}
+            hasPermission={hasPermission}
         />
     );
 
@@ -157,7 +165,7 @@ export default function PricesPage() {
     };
 
     return <>
-        {activeTab === 'prices' && (
+        {activeTab === PricesTabsEnum.PRICES && (
             <>
                 <PricesTable
                     prices={prices}
@@ -191,7 +199,7 @@ export default function PricesPage() {
                 />
             </>
         )}
-        {activeTab === 'groups' && (
+        {activeTab === PricesTabsEnum.GROUPS && (
             <>
                 <PricesGroupsTable
                     priceGroups={priceGroups}
@@ -213,9 +221,17 @@ export default function PricesPage() {
                 />
             </>
         )}
-        {activeTab === 'docs' && (
+        {activeTab === PricesTabsEnum.DEVELOPER_DOCS && (
             <>
-                <DocumentationView
+                <PricesDeveloperDocumentationView
+                    activeTab={activeTab}
+                    setActiveTab={setActiveTab}
+                />
+            </>
+        )}
+        {activeTab === PricesTabsEnum.USER_DOCS && (
+            <>
+                <PricesUserDocumentationView
                     activeTab={activeTab}
                     setActiveTab={setActiveTab}
                 />

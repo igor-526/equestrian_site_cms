@@ -6,17 +6,21 @@ import {Alert, Button, Form, Input} from 'antd';
 import {loginCredentialsType} from "@/types/api/login";
 import authApiLogin from "@/api/auth";
 import { useRouter } from "next/navigation";
+import { useUserContext } from '@/contexts/UserContext';
 
 
 const LoginPage = () => {
     const [showError, setShowError] = useState<string | null>(null);
     const router = useRouter();
+    const { refreshUser } = useUserContext();
 
     const onFinish = async (loginForm: loginCredentialsType) => {
         try {
             const loginStatus = await authApiLogin(loginForm);
             switch (loginStatus) {
                 case "ok":
+                    // Обновляем информацию о пользователе после успешного входа
+                    await refreshUser();
                     router.push("/dashboard");
                     return
                 case "denied":
@@ -60,7 +64,7 @@ const LoginPage = () => {
                         </Button>
                     </Form.Item>
                 </Form>
-                {showError && <Alert message={showError} type="error"/>}
+                {showError && <Alert title={showError} type="error"/>}
             </div>
         </div>
     );

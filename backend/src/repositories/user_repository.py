@@ -1,7 +1,8 @@
 from sqlalchemy import Table, select
+from uuid import UUID
 
-from core.entities.user import User
-from models.users import users
+from core.entities.user import User, UserScope
+from models.users import users, user_scopes, user_scopes_relations
 
 from .abstract_repository import AbstractRepository
 
@@ -17,3 +18,13 @@ class UserRepository(AbstractRepository[User]):
         if mapping is None:
             return None
         return self.entity.model_validate(dict(mapping))
+
+    async def get_user_scopes(self, user_id: UUID) -> list[UserScope]:
+        """Получить группы доступа пользователя"""
+        stmt = (
+            select(user_scopes)
+            .join(user_scopes_relations, user_scopes.c.id == user_scopes_relations.c.scope_id)
+            .where(user_scopes_relations.c.user_id == user_id)
+        )
+        rows = await self.session.execute(stmt)
+        return [UserScope.model_validate(dict(row)) for row in rows.mappings().all()]

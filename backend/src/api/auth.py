@@ -8,7 +8,7 @@ from core.exceptions.auth import InvalidCredentials
 from core.schemas.auth import LoginData, RegisterData
 from core.schemas.users import UserOutDto
 from core.services.auth import AuthService
-from depends.services import get_auth_service
+from depends.services import get_auth_service, get_current_user
 from settings import settings
 
 router = APIRouter()
@@ -116,6 +116,17 @@ async def refresh_access_token(
     return response
 
 
+@router.get(
+    "/me",
+    response_model=UserOutDto,
+    description="Возвращает информацию о текущем аутентифицированном пользователе, включая его группы доступа.",
+)
+async def get_current_user_info(
+    current_user: Annotated[UserOutDto, Depends(get_current_user)],
+) -> UserOutDto:
+    return current_user
+
+
 @router.post(
     "/logout",
     description=(
@@ -124,7 +135,19 @@ async def refresh_access_token(
     ),
 )
 async def logout(response: Response) -> Response:
-    response.delete_cookie(key="access_token", path="/")
-    response.delete_cookie(key="refresh_token", path="/api/auth/refresh")
+    response.delete_cookie(
+        key="access_token",
+        path="/",
+        httponly=True,
+        secure=secure_cookie,
+        samesite="lax",
+    )
+    response.delete_cookie(
+        key="refresh_token",
+        path="/api/auth/refresh",
+        httponly=True,
+        secure=secure_cookie,
+        samesite="lax",
+    )
     response.status_code = 204
     return response

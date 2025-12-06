@@ -8,3 +8,4 @@ from models.photos import photos
 from models.prices import prices, price_groups, price_groups_relations, price_photos
 from models.users import user_scopes, users
 from models.tokens import tokens
+from models.site_settings import site_settings

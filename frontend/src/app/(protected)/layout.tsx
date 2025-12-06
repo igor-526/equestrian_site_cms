@@ -22,7 +22,6 @@ const BaseLayout = ({ children }: { children: React.ReactNode }) => {
 
 
     const handleMenuClick = (path: string) => {
-        // Обычный клиентский роутинг Next.js
         if (pathname !== path) {
             router.push(path);
         }
@@ -43,9 +42,9 @@ const BaseLayout = ({ children }: { children: React.ReactNode }) => {
         },
         {
             key: 'info',
-            label: 'Информация',
+            label: 'Настройки сайта',
             icon: <InfoIcon size={18} />,
-            onClick: () => { handleMenuClick('/info') }
+            onClick: () => { handleMenuClick('/site-settings') }
         },
         {
             key: 'gallery',

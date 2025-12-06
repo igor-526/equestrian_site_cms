@@ -6,6 +6,13 @@ import { TableType } from "./table";
 
 export type PriceAvailableSorting = 'name' | '-name';
 
+export enum PriceFormatter {
+    equal = 'equal',
+    gt = 'gt',
+    lt = 'lt',
+    discuss = 'discuss',
+}
+
 export type PriceListQueryParams = ApiPaginationType & {
     name?: string | string[] | null;
     description?: string | null;

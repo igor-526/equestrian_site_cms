@@ -11,7 +11,7 @@ export const fetchPriceList = async (
 
 export const fetchPrice = async (
     priceId: UUID,
-    params?: { tables?: boolean; page_data?: boolean },
+    params?: { page_data?: boolean },
 ): Promise<ApiResult<PriceOutDto>> => {
     return await priceDetail(priceId, params);
 };

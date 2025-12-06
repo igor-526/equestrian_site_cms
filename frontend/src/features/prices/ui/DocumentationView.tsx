@@ -68,8 +68,8 @@ export const DocumentationView: React.FC<DocumentationViewProps> = ({
                                     <li><code className="bg-gray-200 px-1 rounded">description</code> (string | null) - Краткое описание услуги (максимум 511 символов)</li>
                                     <li><code className="bg-gray-200 px-1 rounded">photos</code> (array) - Массив фотографий услуги (см. структуру ниже)</li>
                                     <li><code className="bg-gray-200 px-1 rounded">groups</code> (array) - Массив групп, к которым принадлежит услуга</li>
-                                    <li><code className="bg-gray-200 px-1 rounded">page_data</code> (string | null) - HTML-контент страницы услуги (доступен только при запросе с параметром <code className="bg-gray-200 px-1 rounded">page_data=true</code>)</li>
-                                    <li><code className="bg-gray-200 px-1 rounded">price_tables</code> (array | null) - Массив таблиц с ценами (доступен только при запросе с параметром <code className="bg-gray-200 px-1 rounded">tables=true</code>)</li>
+                                    <li><code className="bg-gray-200 px-1 rounded">page_data</code> (string | null) - HTML-контент страницы услуги (доступен только при запросе конкретной услуги с параметром <code className="bg-gray-200 px-1 rounded">page_data=true</code>)</li>
+                                    <li><code className="bg-gray-200 px-1 rounded">price_tables</code> (array) - Массив таблиц с ценами (всегда включен в ответ)</li>
                                     <li><code className="bg-gray-200 px-1 rounded">created_at</code> (ISO datetime) - Дата создания</li>
                                     <li><code className="bg-gray-200 px-1 rounded">updated_at</code> (ISO datetime | null) - Дата последнего обновления</li>
                                 </ul>
@@ -215,6 +215,8 @@ export const DocumentationView: React.FC<DocumentationViewProps> = ({
           "name": "Абонементы"
         }
       ],
+      "price_tables": [],
+      "page_data": "<div></div>",
       "created_at": "2024-01-01T00:00:00",
       "updated_at": "2024-01-01T00:00:00"
     }
@@ -224,10 +226,10 @@ export const DocumentationView: React.FC<DocumentationViewProps> = ({
                                         </pre>
                                     </div>
 
-                                    <div className="bg-yellow-50 p-3 rounded border-l-4 border-yellow-400">
-                                        <p className="text-yellow-800 text-sm">
-                                            <strong>Важно:</strong> По умолчанию в ответе не включаются поля <code className="bg-yellow-100 px-1 rounded">page_data</code> и <code className="bg-yellow-100 px-1 rounded">price_tables</code>. 
-                                            Они доступны только при запросе конкретной услуги с соответствующими параметрами.
+                                    <div className="bg-blue-50 p-3 rounded border-l-4 border-blue-400">
+                                        <p className="text-blue-800 text-sm">
+                                            <strong>Важно:</strong> В ответе всегда включаются поля <code className="bg-blue-100 px-1 rounded">price_tables</code> и <code className="bg-blue-100 px-1 rounded">page_data</code>. 
+                                            Поле <code className="bg-blue-100 px-1 rounded">page_data</code> в списке услуг всегда содержит пустой HTML-контейнер <code className="bg-blue-100 px-1 rounded">&lt;div&gt;&lt;/div&gt;</code>.
                                         </p>
                                     </div>
                                 </div>
@@ -247,12 +249,12 @@ export const DocumentationView: React.FC<DocumentationViewProps> = ({
                                         <strong>Параметры запроса (query parameters):</strong>
                                         <ul className="list-disc list-inside space-y-1 ml-4 mt-2">
                                             <li><code className="bg-gray-200 px-1 rounded">page_data</code> (boolean, опционально, по умолчанию false) - Включить HTML-контент страницы в ответ</li>
-                                            <li><code className="bg-gray-200 px-1 rounded">tables</code> (boolean, опционально, по умолчанию false) - Включить таблицы цен в ответ. Если <code className="bg-gray-200 px-1 rounded">tables=true</code>, то <code className="bg-gray-200 px-1 rounded">page_data</code> также включается автоматически</li>
                                         </ul>
                                     </div>
 
                                     <div>
-                                        <strong>Формат ответа (базовый, без page_data и tables):</strong>
+                                        <strong>Формат ответа:</strong>
+                                        <p className="text-sm text-gray-600 mb-2">Ответ всегда включает <code className="bg-gray-200 px-1 rounded">price_tables</code>. Поле <code className="bg-gray-200 px-1 rounded">page_data</code> включается только при <code className="bg-gray-200 px-1 rounded">page_data=true</code>. Структура таблиц описана в разделе 5.</p>
                                         <pre className="bg-gray-800 text-green-400 p-4 rounded mt-2 overflow-x-auto text-xs">
 {`{
   "id": "uuid",
@@ -261,32 +263,12 @@ export const DocumentationView: React.FC<DocumentationViewProps> = ({
   "description": "Абонемент включает 8 занятий",
   "photos": [...],
   "groups": [...],
-  "created_at": "2024-01-01T00:00:00",
-  "updated_at": "2024-01-01T00:00:00"
-}`}
-                                        </pre>
-                                    </div>
-
-                                    <div>
-                                        <strong>Формат ответа (с page_data=true):</strong>
-                                        <pre className="bg-gray-800 text-green-400 p-4 rounded mt-2 overflow-x-auto text-xs">
-{`{
-  "id": "uuid",
-  "name": "Абонемент на месяц",
-  "slug": "abonement-na-mesyac",
-  "description": "Абонемент включает 8 занятий",
-  "photos": [...],
-  "groups": [...],
+  "price_tables": [...],
   "page_data": "<div><h1>Подробное описание услуги</h1><p>...</p></div>",
   "created_at": "2024-01-01T00:00:00",
   "updated_at": "2024-01-01T00:00:00"
 }`}
                                         </pre>
-                                    </div>
-
-                                    <div>
-                                        <strong>Формат ответа (с tables=true):</strong>
-                                        <p className="text-sm text-gray-600 mb-2">Включает и page_data, и price_tables. Структура таблиц описана в разделе 5.</p>
                                     </div>
                                 </div>
                             </div>
@@ -352,6 +334,8 @@ export const DocumentationView: React.FC<DocumentationViewProps> = ({
           "name": "Абонементы"
         }
       ],
+      "price_tables": [],
+      "page_data": "<div></div>",
       "created_at": "2024-01-01T00:00:00",
       "updated_at": null
     }
@@ -364,12 +348,12 @@ export const DocumentationView: React.FC<DocumentationViewProps> = ({
                             <div className="bg-gray-50 p-5 rounded-lg">
                                 <h3 className="text-lg font-semibold mb-3">Пример 3: Получить услугу по slug с полными данными (page_data и tables)</h3>
                                 <pre className="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto text-xs">
-{`GET /api/prices/abonement-na-mesyac?tables=true
+{`GET /api/prices/abonement-na-mesyac?page_data=true
 
 Ответ включает:
 - Все базовые поля услуги
-- page_data (HTML-контент)
-- price_tables (массив таблиц с ценами)
+- price_tables (массив таблиц с ценами, всегда включен)
+- page_data (HTML-контент, включен при page_data=true)
 `}
                                 </pre>
                             </div>
@@ -651,8 +635,8 @@ fetch(\`/api/prices?\${params.toString()}\`);`}
                                 <h3 className="text-xl font-semibold mb-3">5.7. Пример обработки таблиц на фронтенде (JavaScript)</h3>
                                 
                                 <pre className="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto text-xs">
-{`// Получение услуги с таблицами
-const response = await fetch('/api/prices/abonement-na-mesyac?tables=true');
+{`// Получение услуги (таблицы всегда включены)
+const response = await fetch('/api/prices/abonement-na-mesyac?page_data=true');
 const price = await response.json();
 
 // Обработка таблиц
@@ -707,8 +691,8 @@ if (price.price_tables && price.price_tables.length > 0) {
                             <p className="text-green-800">
                                 Данная документация описывает все доступные GET методы API для работы с ценами и услугами конюшни. 
                                 Все методы возвращают данные в формате JSON. Используйте фильтры и параметры запросов для получения 
-                                именно тех данных, которые вам нужны. Помните, что для получения таблиц и HTML-контента страницы 
-                                необходимо использовать соответствующие параметры запроса.
+                                именно тех данных, которые вам нужны. Помните, что <code className="bg-green-100 px-1 rounded">price_tables</code> всегда включены в ответ, 
+                                а для получения HTML-контента страницы необходимо использовать параметр <code className="bg-green-100 px-1 rounded">page_data=true</code>.
                             </p>
                         </div>
                     </section>

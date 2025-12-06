@@ -15,7 +15,6 @@ export type PriceListQueryParams = ApiPaginationType & {
 
 export type PriceQueryParams = {
     page_data?: boolean | null;
-    tables?: boolean | null;
 };
 
 export type PriceOutDto = ApiCreatedUpdatedAtType & {
@@ -25,7 +24,7 @@ export type PriceOutDto = ApiCreatedUpdatedAtType & {
     description: string | null;
     photos: PhotoOutShortDto[];
     groups: PriceGroupSimpleOutDto[];
-    price_tables?: TableType[];
+    price_tables: TableType[];
     page_data?: string;
 };
 

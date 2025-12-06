@@ -105,7 +105,7 @@ export const usePrices = () => {
 
     const loadPriceDetail = useCallback(async (priceId: UUID) => {
         setPriceDetailLoading(true);
-        const response = await fetchPrice(priceId, { tables: true });
+        const response = await fetchPrice(priceId);
         if (response.status === "ok") {
             setPriceDetail(response?.data || null);
         } else if (response.status === "error") {

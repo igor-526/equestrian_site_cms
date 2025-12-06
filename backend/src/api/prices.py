@@ -197,7 +197,7 @@ async def delete_price_group(
 
 @router.get(
     "/prices",
-    response_model=PaginatedEntities[PriceOutDto],
+    response_model=PaginatedEntities[PriceOutWithTablesDto],
     tags=["Price"],
     description="Получить список цен с фильтрацией и сортировкой",
 )
@@ -212,7 +212,7 @@ async def get_prices(
     sort: list[Literal["name", "-name"]] | None = Query(None, description="Сортировка"),
     limit: int | None = Query(None, description="Лимит"),
     offset: int | None = Query(None, description="Смещение"),
-) -> PaginatedEntities[PriceOutDto]:
+) -> PaginatedEntities[PriceOutWithTablesDto]:
     # Преобразуем name и groups в список, если это строка
     name_list = name if isinstance(name, list) else [name] if name else None
     groups_list = groups if isinstance(groups, list) else [groups] if groups else None
@@ -230,7 +230,7 @@ async def get_prices(
     enriched_items = []
     for entity in entities:
         enriched = await _enrich_price_with_relations(
-            entity, price_repository, price_group_repository, photo_repository
+            entity, price_repository, price_group_repository, photo_repository, include_tables=True
         )
         enriched_items.append(enriched)
     
@@ -239,7 +239,7 @@ async def get_prices(
 
 @router.get(
     "/prices/{slug_or_id}",
-    response_model=PriceOutDto | PriceOutWithPageDataDto | PriceOutWithTablesDto,
+    response_model=PriceOutWithTablesDto,
     tags=["Price"],
     description="Получить цену по slug или UUID",
 )
@@ -250,15 +250,14 @@ async def get_price(
     price_group_repository: Annotated[PriceGroupRepositoryProtocol, Depends(get_price_group_repository)],
     photo_repository: Annotated[PhotoRepositoryProtocol, Depends(get_photo_repository)],
     page_data: bool = Query(False, description="Включить page_data в ответ"),
-    tables: bool = Query(False, description="Включить price_tables в ответ"),
-) -> PriceOutDto | PriceOutWithPageDataDto | PriceOutWithTablesDto:
+) -> PriceOutWithTablesDto:
     price = await price_service.get_by_slug_or_id(slug_or_id)
     if price is None:
         from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="Цена не найдена")
 
     return await _enrich_price_with_relations(
-        price, price_repository, price_group_repository, photo_repository, include_page_data=page_data, include_tables=tables
+        price, price_repository, price_group_repository, photo_repository, include_page_data=page_data, include_tables=True
     )
 
 

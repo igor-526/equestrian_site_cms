@@ -12,7 +12,7 @@ services:
     ports:
       - "${EXPOSE_DB_PORT}:5432"
     volumes:
-      - ./pgdata:/var/lib/postgresql/data
+      - ./${EQUESTRIAN_NAME}-pgdata:/var/lib/postgresql/data
 
   app:
     build:

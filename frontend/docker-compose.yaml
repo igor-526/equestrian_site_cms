@@ -5,11 +5,10 @@ services:
       dockerfile: ./Dockerfile
       args:
         NEXT_PUBLIC_BACKEND_URL: ${NEXT_PUBLIC_BACKEND_URL}
-    container_name: eqsitecms-${EQUESTRIAN_NAME}-frontend
+        PORT: ${EXPOSE_APP_PORT}
+    container_name: eqsitecms-${EQUESTRIAN_NAME:-default}-frontend
     restart: always
-    environment:
-      NEXT_PUBLIC_BACKEND_URL: ${NEXT_PUBLIC_BACKEND_URL}
     ports:
-      - "${EXPOSE_APP_PORT}:5100"
+      - "${EXPOSE_APP_PORT}:${EXPOSE_APP_PORT}"
 
 

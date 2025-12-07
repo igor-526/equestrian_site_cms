@@ -31,5 +31,5 @@ COPY --from=builder /app/next.config.ts ./
 
 EXPOSE ${PORT}
 
-# Используем переменную окружения PORT для запуска Next.js
-CMD sh -c "next start -p $PORT"
+# Next.js автоматически использует переменную окружения PORT
+CMD ["npm", "start"]

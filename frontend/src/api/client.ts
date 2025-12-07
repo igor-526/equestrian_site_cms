@@ -40,8 +40,40 @@ function resolveApiBaseUrl() {
     process.env.NEXT_PUBLIC_API_BASE_URL ?? 
     process.env.NEXT_PUBLIC_BACKEND_URL ?? 
     process.env.API_BASE_URL;
+  
   if (explicitUrl) {
-    return explicitUrl;
+    const trimmed = explicitUrl.trim();
+    
+    // Если URL начинается с протокола, используем как есть
+    if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+      // Убираем завершающий слэш, если есть
+      return trimmed.replace(/\/+$/, "");
+    }
+    
+    // Если URL начинается с //, добавляем текущий протокол
+    if (trimmed.startsWith("//")) {
+      if (typeof window !== "undefined") {
+        const protocol = window.location.protocol;
+        return `${protocol}${trimmed.replace(/\/+$/, "")}`;
+      }
+      return `https:${trimmed.replace(/\/+$/, "")}`;
+    }
+    
+    // Если URL начинается со слэша, это относительный путь - используем текущий origin
+    if (trimmed.startsWith("/")) {
+      if (typeof window !== "undefined") {
+        return `${window.location.origin}${trimmed.replace(/\/+$/, "")}`;
+      }
+      return `http://localhost:8001${trimmed.replace(/\/+$/, "")}`;
+    }
+    
+    // Иначе это домен без протокола - добавляем протокол
+    if (typeof window !== "undefined") {
+      const protocol = window.location.protocol;
+      return `${protocol}//${trimmed.replace(/\/+$/, "")}`;
+    }
+    
+    return `https://${trimmed.replace(/\/+$/, "")}`;
   }
 
   if (typeof window !== "undefined") {

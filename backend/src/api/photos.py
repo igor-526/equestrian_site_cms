@@ -1,13 +1,12 @@
 from typing import Annotated, Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, File, Form, Query, UploadFile
+from fastapi import APIRouter, Body, Depends, File, Form, HTTPException, Query, UploadFile
 
 from core.entities.base import PaginatedEntities
-from core.schemas.photos import PhotoCreateDto, PhotoOutDto, PhotoUpdateDto
+from core.schemas.photos import PhotoBatchDeleteDto, PhotoCreateDto, PhotoOutDto, PhotoUpdateDto
 from core.services.photos import PhotoService
 from depends.services import get_photo_service
-from settings import settings
 
 router = APIRouter()
 
@@ -22,7 +21,9 @@ async def get_photos(
     photo_service: Annotated[PhotoService, Depends(get_photo_service)],
     name: str | None = Query(None, description="Фильтр по названию (вхождение)"),
     description: str | None = Query(None, description="Фильтр по описанию (вхождение)"),
-    sort: list[Literal["name", "description", "-name", "-description"]] | None = Query(
+    price_ids: list[UUID] | None = Query(None, description="Фильтр по UUID услуг"),
+    horse_ids: list[UUID] | None = Query(None, description="Фильтр по UUID лошадей"),
+    sort: list[Literal["name", "description", "created_at", "-name", "-description", "-created_at"]] | None = Query(
         None, description="Сортировка"
     ),
     limit: int | None = Query(None, description="Лимит"),
@@ -31,11 +32,12 @@ async def get_photos(
     entities, total = await photo_service.get_filtered(
         name=name,
         description=description,
+        price_ids=price_ids,
+        horse_ids=horse_ids,
         sort=sort,
         limit=limit,
         offset=offset,
     )
-    # Преобразуем entities в DTO (url вычисляется автоматически через computed_field)
     items = [PhotoOutDto.model_validate(entity) for entity in entities]
     return PaginatedEntities(items=items, total=total)
 
@@ -52,7 +54,6 @@ async def get_photo(
 ) -> PhotoOutDto:
     photo = await photo_service.get_by_id(id)
     if photo is None:
-        from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="Фотография не найдена")
 
     return PhotoOutDto.model_validate(photo)
@@ -70,19 +71,8 @@ async def create_photo(
     name: str | None = Form(None, description="Название (опционально, генерируется из имени файла)"),
     description: str | None = Form(None, description="Описание (опционально, по умолчанию пустая строка)"),
 ) -> PhotoOutDto:
-    if not file.filename:
-        from core.exceptions.base import ClientError
-        raise ClientError("Имя файла не указано")
-    
-    file_content = await file.read()
-    
-    # Обрабатываем пустые значения: если передана пустая строка, преобразуем в None
-    # чтобы сервис мог обработать это правильно
-    name_value = name if name and name.strip() else None
-    description_value = description if description is not None else None
-    
-    data = PhotoCreateDto(name=name_value, description=description_value)
-    photo = await photo_service.create(data, file_content, file.filename)
+    data = PhotoCreateDto(name=name, description=description)
+    photo = await photo_service.create_from_upload(data, file, file.filename)
     
     return PhotoOutDto.model_validate(photo)
 
@@ -100,32 +90,8 @@ async def update_photo(
     name: str | None = Form(None, description="Название (опционально)"),
     description: str | None = Form(None, description="Описание (опционально, пустая строка если не указано)"),
 ) -> PhotoOutDto:
-    file_content = None
-    original_filename = None
-    if file:
-        if not file.filename:
-            from core.exceptions.base import ClientError
-            raise ClientError("Имя файла не указано")
-        file_content = await file.read()
-        original_filename = file.filename
-    
-    # Обрабатываем пустые значения
-    # name: если пустая строка или None, передаем "" чтобы сервис сгенерировал из файла
-    # Если не передан вообще (None из Form), не обновляем
-    name_value: str | None = None
-    if name is not None:
-        # Поле передано (даже как пустая строка)
-        name_value = name if name.strip() else ""  # Пустая строка = генерировать из файла
-    
-    # description: если передан (даже как ""), сохраняем как ""
-    # Если None (не передан), не обновляем
-    description_value: str | None = None
-    if description is not None:
-        # Поле передано - сохраняем как "" (даже если было "")
-        description_value = ""
-    
-    data = PhotoUpdateDto(name=name_value, description=description_value)
-    photo = await photo_service.update(id, data, file_content, original_filename)
+    data = PhotoUpdateDto(name=name, description=description)
+    photo = await photo_service.update_from_upload(id, data, file, file.filename if file else None)
     
     return PhotoOutDto.model_validate(photo)
 
@@ -141,4 +107,17 @@ async def delete_photo(
     photo_service: Annotated[PhotoService, Depends(get_photo_service)],
 ) -> None:
     await photo_service.delete(id)
+
+
+@router.post(
+    "/photos/batch-delete",
+    status_code=204,
+    tags=["Photos"],
+    description="Массовое удаление фотографий",
+)
+async def batch_delete_photos(
+    photo_service: Annotated[PhotoService, Depends(get_photo_service)],
+    data: PhotoBatchDeleteDto = Body(...),
+) -> None:
+    await photo_service.batch_delete(data.ids)
 

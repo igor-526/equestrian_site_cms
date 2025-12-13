@@ -233,6 +233,92 @@ export default async function apiFetch<T>(
   }
 }
 
+export async function apiFetchFormData<T>(
+  path: string,
+  formData: FormData,
+  options?: RequestInit
+): Promise<ApiResult<T>> {
+  const apiBaseUrl = resolveApiBaseUrl();
+  const url = `${apiBaseUrl}${path}`;
+
+  try {
+    const credentials =
+      options?.credentials ?? (typeof window === "undefined" ? undefined : "include");
+    
+    const headers: Record<string, string> = {
+      Accept: "application/json",
+    };
+
+    if (options?.headers) {
+      const normalized = normalizeHeaders(options.headers);
+      Object.assign(headers, normalized);
+    }
+
+    const res = await fetch(url, {
+      ...options,
+      method: options?.method ?? "POST",
+      credentials,
+      headers,
+      body: formData,
+    });
+
+    if (res.status === 204 || res.status === 205) {
+      return { status: "ok", data: null as unknown as T };
+    }
+
+    const raw = await res.text();
+    const parsed = raw ? safeJson(raw) : null;
+
+    if (res.ok) {
+      return { status: "ok", data: (parsed as T) ?? (null as unknown as T) };
+    }
+
+    if (res.status === 401 && path !== "/auth/refresh" && typeof window !== "undefined") {
+      const currentPath = window.location.pathname;
+      if (currentPath === "/" && path === "/auth/verify") {
+        return { status: "error", data: { detail: "Authentication required" } };
+      }
+      
+      const refreshSuccess = await attemptRefresh();
+      if (refreshSuccess) {
+        const retryRes = await fetch(url, {
+          ...options,
+          method: options?.method ?? "POST",
+          credentials,
+          headers,
+          body: formData,
+        });
+
+        if (retryRes.status === 204 || retryRes.status === 205) {
+          return { status: "ok", data: null as unknown as T };
+        }
+
+        const retryRaw = await retryRes.text();
+        const retryParsed = retryRaw ? safeJson(retryRaw) : null;
+
+        if (retryRes.ok) {
+          return { status: "ok", data: (retryParsed as T) ?? (null as unknown as T) };
+        }
+
+        const retryDetail =
+          (retryParsed as DetailResponse | null)?.detail ||
+          (retryRaw?.trim() || retryRes.statusText || "Request failed");
+
+        return { status: "error", data: { detail: retryDetail } };
+      }
+      return { status: "error", data: { detail: "Authentication failed" } };
+    }
+
+    const detail =
+      (parsed as DetailResponse | null)?.detail ||
+      (raw?.trim() || res.statusText || "Request failed");
+
+    return { status: "error", data: { detail } };
+  } catch {
+    return { status: "error", data: { detail: "Network error or invalid JSON" } };
+  }
+}
+
 function normalizeHeaders(headers?: HeadersInit): Record<string, string> {
   if (!headers) {
     return {};

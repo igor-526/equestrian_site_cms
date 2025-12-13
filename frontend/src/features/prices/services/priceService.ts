@@ -1,5 +1,6 @@
-import { priceCreate, priceDelete, priceDetail, priceList, priceUpdate } from "@/api/price";
+import { priceCreate, priceDelete, priceDetail, priceList, pricePhotosUpdate, priceUpdate } from "@/api/price";
 import { ApiListPaginatedResponseType, ApiResult } from "@/types/api/api";
+import { PhotoUpdateEntityInDto } from "@/types/api/photos";
 import { PriceCreateInDto, PriceListQueryParams, PriceOutDto, PriceUpdateInDto } from "@/types/api/prices";
 import { UUID } from "crypto";
 
@@ -33,4 +34,11 @@ export const fetchDeletePrice = async (
     priceId: UUID
 ): Promise<ApiResult<null>> => {
     return await priceDelete(priceId);
+};
+
+export const fetchUpdatePricePhotos = async (
+    priceId: UUID,
+    data: PhotoUpdateEntityInDto
+): Promise<ApiResult<null>> => {
+    return await pricePhotosUpdate(priceId, data);
 };

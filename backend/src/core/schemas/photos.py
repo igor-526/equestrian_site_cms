@@ -70,3 +70,9 @@ class PhotoOutShortDto(BaseSchema):
     class Config:
         from_attributes = True
 
+
+class PhotoBatchDeleteDto(BaseSchema):
+    """DTO для массового удаления фотографий."""
+
+    ids: list[UUID] = Field(..., description="Список UUID фотографий для удаления")
+

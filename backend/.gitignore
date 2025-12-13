@@ -5,10 +5,11 @@ __pycache__/
 .env
 .env.*
 # src/migration/versions/*
-pgdata/
+*pgdata/
 redisdata/
 redis-data/
 .mypy_cache/
 .DS_Store
 logs/
 .vscode/
+src/media/*

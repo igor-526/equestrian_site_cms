@@ -2,6 +2,7 @@ import { ApiListPaginatedResponseType, ApiResult } from "@/types/api/api";
 import apiFetch, { addQueryParamsToUrl } from "./client";
 import { UUID } from "crypto";
 import { PriceCreateInDto, PriceListQueryParams, PriceOutDto, PriceUpdateInDto } from "@/types/api/prices";
+import { PhotoUpdateEntityInDto } from "@/types/api/photos";
 
 export const priceList = (
     params: PriceListQueryParams = {},
@@ -45,5 +46,15 @@ export const priceDelete = (
 ): Promise<ApiResult<null>> => {
     return apiFetch<null>(`/prices/${priceId}`, {
         method: "DELETE",
+    });
+};
+
+export const pricePhotosUpdate = (
+    priceId: UUID,
+    payload: PhotoUpdateEntityInDto,
+): Promise<ApiResult<null>> => {
+    return apiFetch<null>(`/prices/${priceId}/photos`, {
+        method: "POST",
+        body: JSON.stringify(payload),
     });
 };

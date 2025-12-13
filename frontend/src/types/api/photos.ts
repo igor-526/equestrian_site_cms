@@ -7,6 +7,8 @@ export type PhotoListQueryParams = ApiPaginationType & {
     name?: string;
     description?: string;
     sort?: PhotoAvailableSorting[];
+    price_ids?: UUID[];
+    horse_ids?: UUID[];
 };
 
 export type PhotoOutShortDto = {
@@ -33,4 +35,13 @@ export type PhotoUpdateInDto = {
     name?: string;
     description?: string;
     file?: File;
+};
+
+export type PhotoBatchDeleteInDto = {
+    ids: UUID[];
+};
+
+export type PhotoUpdateEntityInDto = {
+    photo_ids?: UUID[];
+    main?: UUID;
 };

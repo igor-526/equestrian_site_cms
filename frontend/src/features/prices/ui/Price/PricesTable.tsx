@@ -115,7 +115,6 @@ export const PricesTable: React.FC<PricesTableProps> = ({
                     <TableOutlined />
                 </Button>
                 <Button
-                    disabled={true}
                     onClick={(e) => {
                         e.stopPropagation();
                         onOpenPricePhotosModal(record.id);

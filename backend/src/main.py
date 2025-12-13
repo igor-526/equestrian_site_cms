@@ -1,9 +1,11 @@
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import APIRouter, FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import ValidationError
 from uvicorn import run
 
@@ -55,6 +57,12 @@ app.include_router(router)
 @app.get("/health", tags=["Healthcheck"])
 async def health_check() -> dict[str, str]:
     return {"status": "healthy"}
+
+
+if settings.debug:
+    media_dir = Path(__file__).parent / "media"
+    media_dir.mkdir(parents=True, exist_ok=True)
+    app.mount("/media", StaticFiles(directory=str(media_dir)), name="media")
 
 
 app.add_middleware(

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState, useMemo } from "react";
 import { PricesHeader } from "@/features/prices/ui/PricesHeader";
 import { usePrices } from "@/features/prices/hooks/usePrices";
 import { PricesGroupsTable } from "@/features/prices/ui/PriceGroup/PricesGroupsTable";
@@ -16,6 +16,9 @@ import { PricesDeveloperDocumentationView } from "@/features/prices/ui/PricesDev
 import { PricesUserDocumentationView } from "@/features/prices/ui/PricesUserDocumentationView";
 import { PricesTabsEnum } from "@/features/prices/ui/PricesTabs";
 import { usePricePageActionScopes } from "@/features/prices/hooks/usePriceScopes";
+import { PhotoSelectorModal } from "@/features/photoSelector/ui/PhotoSelectorModal";
+import { usePhotoSelector } from "@/features/photoSelector/hooks/usePhotoSelector";
+import { PhotoUpdateEntityInDto } from "@/types/api/photos";
 
 
 export default function PricesPage() {
@@ -51,15 +54,22 @@ export default function PricesPage() {
         priceGroupsOptions,
         createPrice,
         updatePrice,
+        updatePricePhotos,
         deletePrice,
         priceDetail,
         priceDetailLoading,
         loadPriceDetail,
     } = usePrices();
 
+    const selectedPhotos = useMemo(() => priceDetail?.photos || [], [priceDetail?.photos]);
+
     const {
-        hasPermission,
-    } = usePricePageActionScopes();
+        loadPhotos,
+        loadMorePhotos,
+        photosList,
+        photosLoading,
+        photosTotal,
+    } = usePhotoSelector(selectedPhotos);
 
     const filtersElements = (
         <PricesHeader
@@ -75,7 +85,6 @@ export default function PricesPage() {
             priceTotal={pricesTotal}
             priceFilters={pricesFilters}
             setPriceFilters={setPricesFilters}
-            hasPermission={hasPermission}
         />
     );
 
@@ -145,7 +154,9 @@ export default function PricesPage() {
     };
 
     const handleOpenPricePhotosModal = (priceId: UUID) => {
+        loadPriceDetail(priceId);
         setPricePhotosModalOpen(true);
+        loadPhotos();
     };
 
     const handleOpenPricePageModal = (priceId: UUID) => {
@@ -158,10 +169,16 @@ export default function PricesPage() {
         }
         const result = await updatePrice(priceDetail.id, { price_tables: tableData });
         if (result) {
-            // Перезагружаем данные цены с таблицами
             await loadPriceDetail(priceDetail.id);
             setPriceTableModalOpen(false);
         }
+    };
+
+    const handleUpdatePricePhotos = (updateData: PhotoUpdateEntityInDto) => {
+        if (!priceDetail?.id) {
+            return;
+        }
+        updatePricePhotos(priceDetail.id, updateData);
     };
 
     return <>
@@ -196,6 +213,16 @@ export default function PricesPage() {
                     tableData={priceDetail?.price_tables || []}
                     onSave={handleUpdatePriceTables}
                     loading={priceDetailLoading}
+                />
+                <PhotoSelectorModal
+                    open={pricePhotosModalOpen}
+                    onClose={() => setPricePhotosModalOpen(false)}
+                    selectedPhotos={priceDetail?.photos || []}
+                    allPhotos={photosList}
+                    allPhotosLoading={photosLoading}
+                    allPhotosTotal={photosTotal}
+                    onUpdate={handleUpdatePricePhotos}
+                    onLoadMorePhotos={loadMorePhotos}
                 />
             </>
         )}

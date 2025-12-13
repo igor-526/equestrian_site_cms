@@ -50,8 +50,3 @@ export type PriceUpdateInDto = {
     page_data?: string;
     price_tables?: TableType[];
 };
-
-export type PricePhotosUpdateInDto = {
-    photo_ids?: UUID[];
-    main?: UUID;
-};

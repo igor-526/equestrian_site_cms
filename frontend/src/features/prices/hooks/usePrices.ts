@@ -6,7 +6,8 @@ import { PriceCreateInDto, PriceListQueryParams, PriceOutDto, PriceUpdateInDto }
 import { zodErrorNormalize } from "@/lib/zodErrorNormalize";
 import { priceCreateSchema, priceGroupCreateSchema, priceGroupUpdateSchema, priceUpdateSchema } from "../validators/prices";
 import { UUID } from "crypto";
-import { fetchCreatePrice, fetchDeletePrice, fetchPrice, fetchPriceList, fetchUpdatePrice } from "../services/priceService";
+import { fetchCreatePrice, fetchDeletePrice, fetchPrice, fetchPriceList, fetchUpdatePrice, fetchUpdatePricePhotos } from "../services/priceService";
+import { PhotoUpdateEntityInDto } from "@/types/api/photos";
 
 const defaultPriceGroupsFilters: PriceGroupListQueryParams = {
     name: undefined,
@@ -36,7 +37,6 @@ export const usePrices = () => {
     const [priceDetailLoading, setPriceDetailLoading] = useState<boolean>(false);
     const [priceDetail, setPriceDetail] = useState<PriceOutDto | null>(null);
 
-
     const [prices, setPrices] = useState<PriceOutDto[]>([]);
     const [pricesFilters, setPricesFilters] = useState<PriceListQueryParams>(defaultPricesFilters);
     const [pricesTotal, setPricesTotal] = useState<number>(0);
@@ -45,19 +45,22 @@ export const usePrices = () => {
 
     const loadPriceGroupsForOptions = useCallback(async () => {
         const response = await fetchPriceGroupList({ limit: 1000000, offset: 0 });
-        if (response.status === "ok") {
-            setPriceGroupsOptions(response?.data?.items.map((item) => ({ key: item.id.toString(), label: item.name, value: item.id })) || []);
-        } else if (response.status === "error") {
-            toast.error({
-                title: "Ошибка",
-                description: "Не удалось загрузить группы услуг",
-            });
-
-        } else {
-            toast.error({
-                title: "Ошибка",
-                description: "Неизвестная ошибка",
-            });
+        switch (response.status) {
+            case "ok":
+                setPriceGroupsOptions(response?.data?.items.map((item) => ({ key: item.id.toString(), label: item.name, value: item.id })) || []);
+                break;
+            case "error":
+                toast.error({
+                    title: "Ошибка",
+                    description: "Не удалось загрузить группы услуг",
+                });
+                break;
+            default:
+                toast.error({
+                    title: "Ошибка",
+                    description: "Неизвестная ошибка",
+                });
+                break;
         }
     }, [toast]);
 
@@ -299,7 +302,6 @@ export const usePrices = () => {
         }
     }, [toast, loadPrices]);
 
-
     const resetPriceGroupsValidation = useCallback(() => {
         setPriceGroupsValidationErrors({});
     }, []);
@@ -315,6 +317,27 @@ export const usePrices = () => {
     const resetPricesFilters = useCallback(() => {
         setPricesFilters(defaultPricesFilters);
     }, []);
+
+    const updatePricePhotos = useCallback(async (priceId: UUID, updateData: PhotoUpdateEntityInDto) => {
+        const response = await fetchUpdatePricePhotos(priceId, updateData);
+        switch (response.status) {
+            case "ok":
+                loadPriceDetail(priceId);
+                return true;
+            case "error":
+                toast.error({
+                    title: "Ошибка",
+                    description: response?.data?.detail || "Неизвестная ошибка",
+                });
+                return false;
+            default:
+                toast.error({
+                    title: "Ошибка",
+                    description: "Неизвестная ошибка",
+                });
+                return false;
+        }
+    }, [toast, loadPriceDetail]);
 
     return {
         priceGroups,
@@ -339,6 +362,7 @@ export const usePrices = () => {
         resetPricesFilters,
         createPrice,
         updatePrice,
+        updatePricePhotos,
         deletePrice,
         priceDetail,
         priceDetailLoading,

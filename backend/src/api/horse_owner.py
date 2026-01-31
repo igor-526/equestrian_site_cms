@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, Query
 
 from core.entities.base import PaginatedEntities
 from core.schemas.horse_owner import (
-    HorseOwnerCreateDto,
+    HorseOwnerCreateInDto,
     HorseOwnerOutDto,
     HorseOwnerUpdateDto,
 )
@@ -25,12 +25,17 @@ async def get_horse_owners(
     horse_owner_service: Annotated[HorseOwnerService, Depends(get_horse_owner_service)],
     name: str | None = Query(None, description="Фильтр по имени (вхождение)"),
     description: str | None = Query(None, description="Фильтр по описанию (вхождение)"),
-    type: list[str] | None = Query(None, description="Фильтр по типу (множественная фильтрация)"),
-    address: str | None = Query(None, description="Фильтр по адресу (вхождение)"),
-    phone_numbers: str | None = Query(None, description="Фильтр по телефонным номерам (вхождение)"),
-    sort: list[Literal["name", "description", "type", "-name", "-description", "-type"]] | None = Query(
-        None, description="Сортировка"
+    type: list[str] | None = Query(
+        None, description="Фильтр по типу (множественная фильтрация)"
     ),
+    address: str | None = Query(None, description="Фильтр по адресу (вхождение)"),
+    phone_numbers: str | None = Query(
+        None, description="Фильтр по телефонным номерам (вхождение)"
+    ),
+    sort: (
+        list[Literal["name", "description", "type", "-name", "-description", "-type"]]
+        | None
+    ) = Query(None, description="Сортировка"),
     limit: int | None = Query(None, description="Лимит"),
     offset: int | None = Query(None, description="Смещение"),
 ) -> PaginatedEntities[HorseOwnerOutDto]:
@@ -63,6 +68,7 @@ async def get_horse_owner(
     horse_owner = await horse_owner_service.get_by_id(id)
     if horse_owner is None:
         from fastapi import HTTPException
+
         raise HTTPException(status_code=404, detail="Владелец не найден")
 
     return HorseOwnerOutDto.model_validate(horse_owner)
@@ -75,7 +81,7 @@ async def get_horse_owner(
     description="Создать нового владельца",
 )
 async def create_horse_owner(
-    data: HorseOwnerCreateDto,
+    data: HorseOwnerCreateInDto,
     horse_owner_service: Annotated[HorseOwnerService, Depends(get_horse_owner_service)],
 ) -> HorseOwnerOutDto:
     horse_owner = await horse_owner_service.create(data)
@@ -108,4 +114,3 @@ async def delete_horse_owner(
     horse_owner_service: Annotated[HorseOwnerService, Depends(get_horse_owner_service)],
 ) -> None:
     await horse_owner_service.delete(id)
-

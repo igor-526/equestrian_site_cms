@@ -6,7 +6,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.protocols.repositories import (
     BreedRepositoryProtocol,
     CoatColorRepositoryProtocol,
+    HorseChildrenRepositoryProtocol,
     HorseOwnerRepositoryProtocol,
+    HorseRepositoryProtocol,
     HorseServiceRepositoryProtocol,
     PhotoRepositoryProtocol,
     PriceGroupRepositoryProtocol,
@@ -18,7 +20,9 @@ from depends.utils import get_session
 from repositories import (
     BreedRepository,
     CoatColorRepository,
+    HorseChildrenRepository,
     HorseOwnerRepository,
+    HorseRepository,
     HorseServiceRepository,
     PhotoRepository,
     PriceGroupRepository,
@@ -80,3 +84,15 @@ async def get_price_repository(
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> PriceRepositoryProtocol:
     return PriceRepository(session=session)
+
+
+async def get_horse_repository(
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> HorseRepositoryProtocol:
+    return HorseRepository(session=session)
+
+
+async def get_horse_children_repository(
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> HorseChildrenRepositoryProtocol:
+    return HorseChildrenRepository(session=session)

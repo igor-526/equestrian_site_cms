@@ -80,7 +80,9 @@ class AbstractRepository[E: Entity](ABC):
     async def get_by_slug(self, slug: str) -> E | None:
         """Получить сущность по slug. Работает только для таблиц с колонкой slug."""
         if "slug" not in self.table.c:
-            raise AttributeError(f"Table {self.table.name} does not have a 'slug' column")
+            raise AttributeError(
+                f"Table {self.table.name} does not have a 'slug' column"
+            )
         stmt = select(self.table).where(self.table.c.slug == slug)
         row = await self.session.execute(stmt)
         mapping = row.mappings().first()
@@ -101,7 +103,9 @@ class AbstractRepository[E: Entity](ABC):
     async def find_by_name(self, name: str) -> E | None:
         """Проверить существование name. Работает только для таблиц с колонкой name."""
         if "name" not in self.table.c:
-            raise AttributeError(f"Table {self.table.name} does not have a 'name' column")
+            raise AttributeError(
+                f"Table {self.table.name} does not have a 'name' column"
+            )
         stmt = select(self.table).where(self.table.c.name == name)
         row = await self.session.execute(stmt)
         mapping = row.mappings().first()

@@ -6,7 +6,7 @@ from .base import Entity, SlugMixin, TimeStampMixin
 from .price import PriceFormatter
 
 
-class HorseService(Entity, TimeStampMixin, SlugMixin):
+class HorseServiceEntity(Entity, TimeStampMixin, SlugMixin):
     """Услуга для лошади."""
 
     name: str = Field(

@@ -22,20 +22,39 @@ router = APIRouter()
     description="Получить список настроек с фильтрацией и сортировкой",
 )
 async def get_site_settings(
-    site_settings_service: Annotated[SiteSettingsService, Depends(get_site_settings_service)],
-    key: list[str] | None = Query(None, description="Фильтр по ключам (множественная фильтрация)"),
+    site_settings_service: Annotated[
+        SiteSettingsService, Depends(get_site_settings_service)
+    ],
+    key: list[str] | None = Query(
+        None, description="Фильтр по ключам (множественная фильтрация)"
+    ),
     name: str | None = Query(None, description="Фильтр по названию (вхождение)"),
     value: str | None = Query(None, description="Фильтр по значению (вхождение)"),
     description: str | None = Query(None, description="Фильтр по описанию (вхождение)"),
-    type: list[Literal["string", "number", "float", "boolean", "object", "date", "time", "datetime"]] | None = Query(
-        None, description="Фильтр по типу (множественная фильтрация)"
-    ),
+    type: (
+        list[
+            Literal[
+                "string",
+                "number",
+                "float",
+                "boolean",
+                "object",
+                "date",
+                "time",
+                "datetime",
+            ]
+        ]
+        | None
+    ) = Query(None, description="Фильтр по типу (множественная фильтрация)"),
     sort: list[Literal["key", "name", "type", "-key", "-name", "-type"]] | None = Query(
         None, description="Сортировка"
     ),
     limit: int | None = Query(None, description="Лимит"),
     offset: int | None = Query(None, description="Смещение"),
-    full: bool = Query(False, description="Полный список с пагинацией (по умолчанию только key, value, type)"),
+    full: bool = Query(
+        False,
+        description="Полный список с пагинацией (по умолчанию только key, value, type)",
+    ),
 ):
     entities, total = await site_settings_service.get_filtered(
         key=key,
@@ -67,11 +86,14 @@ async def get_site_settings(
 )
 async def get_site_setting(
     id: UUID,
-    site_settings_service: Annotated[SiteSettingsService, Depends(get_site_settings_service)],
+    site_settings_service: Annotated[
+        SiteSettingsService, Depends(get_site_settings_service)
+    ],
 ) -> SiteSettingOutDto:
     site_setting = await site_settings_service.get_by_id(id)
     if site_setting is None:
         from fastapi import HTTPException
+
         raise HTTPException(status_code=404, detail="Настройка не найдена")
 
     return SiteSettingOutDto.model_validate(site_setting)
@@ -85,7 +107,9 @@ async def get_site_setting(
 )
 async def create_site_setting(
     data: SiteSettingCreateDto,
-    site_settings_service: Annotated[SiteSettingsService, Depends(get_site_settings_service)],
+    site_settings_service: Annotated[
+        SiteSettingsService, Depends(get_site_settings_service)
+    ],
 ) -> SiteSettingOutDto:
     site_setting = await site_settings_service.create(data)
     return SiteSettingOutDto.model_validate(site_setting)
@@ -100,7 +124,9 @@ async def create_site_setting(
 async def update_site_setting(
     id: UUID,
     data: SiteSettingUpdateDto,
-    site_settings_service: Annotated[SiteSettingsService, Depends(get_site_settings_service)],
+    site_settings_service: Annotated[
+        SiteSettingsService, Depends(get_site_settings_service)
+    ],
 ) -> SiteSettingOutDto:
     site_setting = await site_settings_service.update(id, data)
     return SiteSettingOutDto.model_validate(site_setting)
@@ -114,7 +140,8 @@ async def update_site_setting(
 )
 async def delete_site_setting(
     id: UUID,
-    site_settings_service: Annotated[SiteSettingsService, Depends(get_site_settings_service)],
+    site_settings_service: Annotated[
+        SiteSettingsService, Depends(get_site_settings_service)
+    ],
 ) -> None:
     await site_settings_service.delete(id)
-

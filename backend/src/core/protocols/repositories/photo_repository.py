@@ -15,11 +15,20 @@ class PhotoRepositoryProtocol(BaseRepositoryProtocol[Photo], Protocol):
         description: str | None = None,
         price_ids: list[UUID] | None = None,
         horse_ids: list[UUID] | None = None,
-        sort: list[Literal["name", "description", "created_at", "-name", "-description", "-created_at"]] | None = None,
+        sort: (
+            list[
+                Literal[
+                    "name",
+                    "description",
+                    "created_at",
+                    "-name",
+                    "-description",
+                    "-created_at",
+                ]
+            ]
+            | None
+        ) = None,
         limit: int | None = None,
         offset: int | None = None,
     ) -> tuple[list[Photo], int]: ...
     async def batch_delete(self, ids: list[UUID]) -> None: ...
-
-
-

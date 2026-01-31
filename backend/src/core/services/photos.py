@@ -17,13 +17,17 @@ class PhotoService:
         self.media_dir = Path(__file__).parent.parent.parent / "media"
         self.media_dir.mkdir(parents=True, exist_ok=True)
 
-    async def _generate_unique_name(self, base_name: str, exclude_id: UUID | None = None) -> str:
+    async def _generate_unique_name(
+        self, base_name: str, exclude_id: UUID | None = None
+    ) -> str:
         counter = 1
         current_name = base_name
 
         while True:
             existing = await self.photo_repository.find_by_name(current_name)
-            if existing is None or (exclude_id is not None and existing.id == exclude_id):
+            if existing is None or (
+                exclude_id is not None and existing.id == exclude_id
+            ):
                 return current_name
             current_name = f"{base_name}-{counter}"
             counter += 1
@@ -45,6 +49,7 @@ class PhotoService:
 
     async def _save_file(self, file_content: bytes, filename: str) -> str:
         import asyncio
+
         file_path = self._get_file_path(filename)
         loop = asyncio.get_event_loop()
         await loop.run_in_executor(None, lambda: file_path.write_bytes(file_content))
@@ -52,6 +57,7 @@ class PhotoService:
 
     async def _delete_file(self, filename: str) -> None:
         import asyncio
+
         file_path = self._get_file_path(filename)
         if file_path.exists():
             loop = asyncio.get_event_loop()
@@ -62,19 +68,39 @@ class PhotoService:
 
     def _validate_file_type(self, filename: str, content: bytes) -> None:
         extension = self._get_file_extension(filename).lower()
-        
+
         image_extensions = {
-            ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".svg",
-            ".ico", ".tiff", ".tif", ".heic", ".heif"
+            ".jpg",
+            ".jpeg",
+            ".png",
+            ".gif",
+            ".bmp",
+            ".webp",
+            ".svg",
+            ".ico",
+            ".tiff",
+            ".tif",
+            ".heic",
+            ".heif",
         }
-        
+
         video_extensions = {
-            ".mp4", ".avi", ".mov", ".wmv", ".flv", ".webm", ".mkv",
-            ".m4v", ".3gp", ".ogv", ".mpeg", ".mpg"
+            ".mp4",
+            ".avi",
+            ".mov",
+            ".wmv",
+            ".flv",
+            ".webm",
+            ".mkv",
+            ".m4v",
+            ".3gp",
+            ".ogv",
+            ".mpeg",
+            ".mpg",
         }
-        
+
         allowed_extensions = image_extensions | video_extensions
-        
+
         if extension not in allowed_extensions:
             raise ClientError(
                 f"Недопустимый тип файла: {extension}. "
@@ -85,11 +111,12 @@ class PhotoService:
         self, data: PhotoCreateDto, file, original_filename: str | None
     ) -> Photo:
         from fastapi import UploadFile
+
         from core.exceptions.base import ClientError
-        
+
         if not original_filename:
             raise ClientError("Имя файла не указано")
-        
+
         file_content = await file.read()
         return await self.create(data, file_content, original_filename)
 
@@ -99,41 +126,46 @@ class PhotoService:
         self._validate_file_type(original_filename, file_content)
         filename = self._generate_filename(original_filename)
         await self._save_file(file_content, filename)
-        
+
         name = data.name
         if not name or name.strip() == "":
             name = self._get_name_from_filename(original_filename)
-        
+
         name = await self._generate_unique_name(name)
         description = data.description if data.description is not None else ""
-        
+
         photo = Photo(
             name=name,
             description=description,
             path=filename,
         )
-        
+
         return await self.photo_repository.create(photo)
 
     async def update_from_upload(
         self, id: UUID, data: PhotoUpdateDto, file, original_filename: str | None
     ) -> Photo:
         from fastapi import UploadFile
+
         from core.exceptions.base import ClientError
-        
+
         file_content = None
         filename = None
-        
+
         if file:
             if not original_filename:
                 raise ClientError("Имя файла не указано")
             file_content = await file.read()
             filename = original_filename
-        
+
         return await self.update(id, data, file_content, filename)
 
     async def update(
-        self, id: UUID, data: PhotoUpdateDto, file_content: bytes | None = None, original_filename: str | None = None
+        self,
+        id: UUID,
+        data: PhotoUpdateDto,
+        file_content: bytes | None = None,
+        original_filename: str | None = None,
     ) -> Photo:
         photo = await self.photo_repository.get_by_id(id)
         if photo is None:
@@ -148,7 +180,7 @@ class PhotoService:
             photo.path = filename
 
         update_data = {}
-        
+
         if data.name is not None:
             name_value = data.name
             if not name_value or name_value.strip() == "":
@@ -156,10 +188,12 @@ class PhotoService:
                     name_value = self._get_name_from_filename(original_filename)
                 else:
                     name_value = self._get_name_from_filename(photo.path)
-            
-            name_value = await self._generate_unique_name(name_value, exclude_id=photo.id)
+
+            name_value = await self._generate_unique_name(
+                name_value, exclude_id=photo.id
+            )
             update_data["name"] = name_value
-        
+
         if data.description is not None:
             update_data["description"] = ""
 
@@ -175,10 +209,10 @@ class PhotoService:
         photo = await self.photo_repository.get_by_id(id)
         if photo is None:
             raise ClientError("Фотография не найдена")
-        
+
         filename = photo.path
         await self._delete_file(filename)
-        
+
         await self.photo_repository.delete(id)
 
     async def get_filtered(
@@ -188,7 +222,19 @@ class PhotoService:
         description: str | None = None,
         price_ids: list[UUID] | None = None,
         horse_ids: list[UUID] | None = None,
-        sort: list[Literal["name", "description", "created_at", "-name", "-description", "-created_at"]] | None = None,
+        sort: (
+            list[
+                Literal[
+                    "name",
+                    "description",
+                    "created_at",
+                    "-name",
+                    "-description",
+                    "-created_at",
+                ]
+            ]
+            | None
+        ) = None,
         limit: int | None = None,
         offset: int | None = None,
     ) -> tuple[list[Photo], int]:
@@ -205,15 +251,14 @@ class PhotoService:
     async def batch_delete(self, ids: list[UUID]) -> None:
         if not ids:
             return
-        
+
         photos_to_delete = []
         for photo_id in ids:
             photo = await self.photo_repository.get_by_id(photo_id)
             if photo:
                 photos_to_delete.append(photo)
-        
+
         for photo in photos_to_delete:
             await self._delete_file(photo.path)
-        
-        await self.photo_repository.batch_delete(ids)
 
+        await self.photo_repository.batch_delete(ids)

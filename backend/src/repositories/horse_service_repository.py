@@ -2,15 +2,15 @@ from typing import Literal
 
 from sqlalchemy import Table, func, or_, select
 
-from core.entities.horse_service import HorseService
+from core.entities.horse_service import HorseServiceEntity
 from models.horse_service import horse_service
 
 from .abstract_repository import AbstractRepository
 
 
-class HorseServiceRepository(AbstractRepository[HorseService]):
+class HorseServiceRepository(AbstractRepository[HorseServiceEntity]):
     table: Table = horse_service
-    entity = HorseService
+    entity = HorseServiceEntity
 
     async def get_filtered(
         self,
@@ -19,10 +19,24 @@ class HorseServiceRepository(AbstractRepository[HorseService]):
         slug: str | None = None,
         description: str | None = None,
         page_data: str | None = None,
-        sort: list[Literal["name", "description", "slug", "price", "-name", "-description", "-slug", "-price"]] | None = None,
+        sort: (
+            list[
+                Literal[
+                    "name",
+                    "description",
+                    "slug",
+                    "price",
+                    "-name",
+                    "-description",
+                    "-slug",
+                    "-price",
+                ]
+            ]
+            | None
+        ) = None,
         limit: int | None = None,
         offset: int | None = None,
-    ) -> tuple[list[HorseService], int]:
+    ) -> tuple[list[HorseServiceEntity], int]:
         """Получить отфильтрованный список с подсчётом общего количества."""
         stmt = select(self.table)
         count_stmt = select(func.count()).select_from(self.table)
@@ -59,10 +73,11 @@ class HorseServiceRepository(AbstractRepository[HorseService]):
             stmt = stmt.offset(offset)
 
         rows = await self.session.execute(stmt)
-        entities = [self.entity.model_validate(dict(row)) for row in rows.mappings().all()]
+        entities = [
+            self.entity.model_validate(dict(row)) for row in rows.mappings().all()
+        ]
 
         total_result = await self.session.execute(count_stmt)
         total = total_result.scalar() or 0
 
         return entities, total
-

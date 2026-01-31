@@ -1,10 +1,24 @@
 from typing import Annotated, Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Body, Depends, File, Form, HTTPException, Query, UploadFile
+from fastapi import (
+    APIRouter,
+    Body,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Query,
+    UploadFile,
+)
 
 from core.entities.base import PaginatedEntities
-from core.schemas.photos import PhotoBatchDeleteDto, PhotoCreateDto, PhotoOutDto, PhotoUpdateDto
+from core.schemas.photos import (
+    PhotoBatchDeleteDto,
+    PhotoCreateDto,
+    PhotoOutDto,
+    PhotoUpdateDto,
+)
 from core.services.photos import PhotoService
 from depends.services import get_photo_service
 
@@ -23,9 +37,19 @@ async def get_photos(
     description: str | None = Query(None, description="Фильтр по описанию (вхождение)"),
     price_ids: list[UUID] | None = Query(None, description="Фильтр по UUID услуг"),
     horse_ids: list[UUID] | None = Query(None, description="Фильтр по UUID лошадей"),
-    sort: list[Literal["name", "description", "created_at", "-name", "-description", "-created_at"]] | None = Query(
-        None, description="Сортировка"
-    ),
+    sort: (
+        list[
+            Literal[
+                "name",
+                "description",
+                "created_at",
+                "-name",
+                "-description",
+                "-created_at",
+            ]
+        ]
+        | None
+    ) = Query(None, description="Сортировка"),
     limit: int | None = Query(None, description="Лимит"),
     offset: int | None = Query(None, description="Смещение"),
 ) -> PaginatedEntities[PhotoOutDto]:
@@ -68,12 +92,16 @@ async def get_photo(
 async def create_photo(
     photo_service: Annotated[PhotoService, Depends(get_photo_service)],
     file: UploadFile = File(..., description="Файл фотографии или видео"),
-    name: str | None = Form(None, description="Название (опционально, генерируется из имени файла)"),
-    description: str | None = Form(None, description="Описание (опционально, по умолчанию пустая строка)"),
+    name: str | None = Form(
+        None, description="Название (опционально, генерируется из имени файла)"
+    ),
+    description: str | None = Form(
+        None, description="Описание (опционально, по умолчанию пустая строка)"
+    ),
 ) -> PhotoOutDto:
     data = PhotoCreateDto(name=name, description=description)
     photo = await photo_service.create_from_upload(data, file, file.filename)
-    
+
     return PhotoOutDto.model_validate(photo)
 
 
@@ -86,13 +114,19 @@ async def create_photo(
 async def update_photo(
     photo_service: Annotated[PhotoService, Depends(get_photo_service)],
     id: UUID,
-    file: UploadFile | None = File(None, description="Новый файл фотографии или видео (опционально)"),
+    file: UploadFile | None = File(
+        None, description="Новый файл фотографии или видео (опционально)"
+    ),
     name: str | None = Form(None, description="Название (опционально)"),
-    description: str | None = Form(None, description="Описание (опционально, пустая строка если не указано)"),
+    description: str | None = Form(
+        None, description="Описание (опционально, пустая строка если не указано)"
+    ),
 ) -> PhotoOutDto:
     data = PhotoUpdateDto(name=name, description=description)
-    photo = await photo_service.update_from_upload(id, data, file, file.filename if file else None)
-    
+    photo = await photo_service.update_from_upload(
+        id, data, file, file.filename if file else None
+    )
+
     return PhotoOutDto.model_validate(photo)
 
 
@@ -120,4 +154,3 @@ async def batch_delete_photos(
     data: PhotoBatchDeleteDto = Body(...),
 ) -> None:
     await photo_service.batch_delete(data.ids)
-

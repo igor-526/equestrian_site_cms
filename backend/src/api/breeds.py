@@ -27,9 +27,10 @@ async def get_breeds(
     slug: str | None = Query(None, description="Фильтр по slug (вхождение)"),
     description: str | None = Query(None, description="Фильтр по описанию (вхождение)"),
     page_data: str | None = Query(None, description="Фильтр по page_data (вхождение)"),
-    sort: list[Literal["name", "description", "slug", "-name", "-description", "-slug"]] | None = Query(
-        None, description="Сортировка"
-    ),
+    sort: (
+        list[Literal["name", "description", "slug", "-name", "-description", "-slug"]]
+        | None
+    ) = Query(None, description="Сортировка"),
     limit: int | None = Query(None, description="Лимит"),
     offset: int | None = Query(None, description="Смещение"),
 ) -> PaginatedEntities[BreedOutDto]:
@@ -62,6 +63,7 @@ async def get_breed(
     breed = await breed_service.get_by_slug_or_id(slug_or_id)
     if breed is None:
         from fastapi import HTTPException
+
         raise HTTPException(status_code=404, detail="Порода не найдена")
 
     if page_data:
@@ -109,4 +111,3 @@ async def delete_breed(
     breed_service: Annotated[BreedService, Depends(get_breed_service)],
 ) -> None:
     await breed_service.delete(slug_or_id)
-

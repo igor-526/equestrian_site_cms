@@ -15,11 +15,24 @@ class SiteSettingsRepositoryProtocol(BaseRepositoryProtocol[SiteSetting], Protoc
         name: str | None = None,
         value: str | None = None,
         description: str | None = None,
-        type: list[Literal["string", "number", "float", "boolean", "object", "date", "time", "datetime"]] | None = None,
-        sort: list[Literal["key", "name", "type", "-key", "-name", "-type"]] | None = None,
+        type: (
+            list[
+                Literal[
+                    "string",
+                    "number",
+                    "float",
+                    "boolean",
+                    "object",
+                    "date",
+                    "time",
+                    "datetime",
+                ]
+            ]
+            | None
+        ) = None,
+        sort: (
+            list[Literal["key", "name", "type", "-key", "-name", "-type"]] | None
+        ) = None,
         limit: int | None = None,
         offset: int | None = None,
     ) -> tuple[list[SiteSetting], int]: ...
-
-
-

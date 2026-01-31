@@ -1,8 +1,9 @@
-from sqlalchemy import Table, select
 from uuid import UUID
 
+from sqlalchemy import Table, select
+
 from core.entities.user import User, UserScope
-from models.users import users, user_scopes, user_scopes_relations
+from models.users import user_scopes, user_scopes_relations, users
 
 from .abstract_repository import AbstractRepository
 
@@ -23,7 +24,10 @@ class UserRepository(AbstractRepository[User]):
         """Получить группы доступа пользователя"""
         stmt = (
             select(user_scopes)
-            .join(user_scopes_relations, user_scopes.c.id == user_scopes_relations.c.scope_id)
+            .join(
+                user_scopes_relations,
+                user_scopes.c.id == user_scopes_relations.c.scope_id,
+            )
             .where(user_scopes_relations.c.user_id == user_id)
         )
         rows = await self.session.execute(stmt)

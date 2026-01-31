@@ -1,5 +1,6 @@
 from sqlalchemy import Column, String, Table, text
 from sqlalchemy.dialects.postgresql import JSONB
+
 from utils.basemodel import metadata, timestamp_columns, uuid_pk
 
 horse_owner = Table(

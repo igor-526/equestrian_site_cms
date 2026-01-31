@@ -1,4 +1,5 @@
 from enum import StrEnum, auto
+
 from pydantic import BaseModel, Field
 
 
@@ -8,6 +9,7 @@ class TableCellFormatter(StrEnum):
     text_bold = auto()
     text_italic = auto()
     text_underline = auto()
+
 
 class TableColumn(BaseModel):
     """Колонка таблицы."""
@@ -29,6 +31,7 @@ class TableColumn(BaseModel):
         description="Форматтер для отображения значения в ячейке",
     )
 
+
 class TableCell(BaseModel):
     """Ячейка таблицы."""
 
@@ -46,6 +49,7 @@ class TableCell(BaseModel):
         description="Форматтер для отображения значения в ячейке",
     )
 
+
 class TableRow(BaseModel):
     """Строка таблицы."""
 
@@ -53,6 +57,7 @@ class TableRow(BaseModel):
         default={},
         description="Ячейки строки по ключам колонок",
     )
+
 
 class Table(BaseModel):
     """Таблица."""

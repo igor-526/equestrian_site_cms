@@ -22,7 +22,12 @@ class HorseOwnerRepository(AbstractRepository[HorseOwner]):
         type: list[str] | None = None,
         address: str | None = None,
         phone_numbers: str | None = None,
-        sort: list[Literal["name", "description", "type", "-name", "-description", "-type"]] | None = None,
+        sort: (
+            list[
+                Literal["name", "description", "type", "-name", "-description", "-type"]
+            ]
+            | None
+        ) = None,
         limit: int | None = None,
         offset: int | None = None,
     ) -> tuple[list[HorseOwner], int]:
@@ -67,12 +72,11 @@ class HorseOwnerRepository(AbstractRepository[HorseOwner]):
             stmt = stmt.offset(offset)
 
         rows = await self.session.execute(stmt)
-        entities = [self.entity.model_validate(dict(row)) for row in rows.mappings().all()]
+        entities = [
+            self.entity.model_validate(dict(row)) for row in rows.mappings().all()
+        ]
 
         total_result = await self.session.execute(count_stmt)
         total = total_result.scalar() or 0
 
         return entities, total
-
-
-

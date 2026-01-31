@@ -3,15 +3,17 @@ from uuid import UUID
 
 from core.entities.horse_owner import HorseOwner
 from core.exceptions.base import ClientError
-from core.protocols.repositories.horse_owner_repository import HorseOwnerRepositoryProtocol
-from core.schemas.horse_owner import HorseOwnerCreateDto, HorseOwnerUpdateDto
+from core.protocols.repositories.horse_owner_repository import (
+    HorseOwnerRepositoryProtocol,
+)
+from core.schemas.horse_owner import HorseOwnerCreateInDto, HorseOwnerUpdateDto
 
 
 class HorseOwnerService:
     def __init__(self, horse_owner_repository: HorseOwnerRepositoryProtocol):
         self.horse_owner_repository = horse_owner_repository
 
-    async def create(self, data: HorseOwnerCreateDto) -> HorseOwner:
+    async def create(self, data: HorseOwnerCreateInDto) -> HorseOwner:
         """Создать нового владельца."""
         horse_owner = HorseOwner(**data.model_dump())
         return await self.horse_owner_repository.create(horse_owner)
@@ -47,7 +49,12 @@ class HorseOwnerService:
         type: list[str] | None = None,
         address: str | None = None,
         phone_numbers: str | None = None,
-        sort: list[Literal["name", "description", "type", "-name", "-description", "-type"]] | None = None,
+        sort: (
+            list[
+                Literal["name", "description", "type", "-name", "-description", "-type"]
+            ]
+            | None
+        ) = None,
         limit: int | None = None,
         offset: int | None = None,
     ) -> tuple[list[HorseOwner], int]:
@@ -62,4 +69,3 @@ class HorseOwnerService:
             limit=limit,
             offset=offset,
         )
-

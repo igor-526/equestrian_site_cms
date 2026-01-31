@@ -1,4 +1,5 @@
 from enum import StrEnum, auto
+
 from pydantic import Field
 
 from .base import Entity, TimeStampMixin
@@ -9,6 +10,7 @@ class HorseOwnerType(StrEnum):
 
     person = auto()
     company = auto()
+
 
 class HorseOwner(Entity, TimeStampMixin):
     """Владелец лошади."""

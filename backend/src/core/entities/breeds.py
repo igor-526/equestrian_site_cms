@@ -11,6 +11,11 @@ class Breed(Entity, TimeStampMixin, SlugMixin):
         description="Название породы",
         examples=["Арабская"],
     )
+    short_name: str | None = Field(
+        default=None,
+        description="Короткое название породы",
+        examples=["араб."],
+    )
     description: str | None = Field(
         default=None,
         description="Описание породы",

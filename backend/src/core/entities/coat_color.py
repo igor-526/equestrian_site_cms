@@ -11,6 +11,11 @@ class CoatColor(Entity, TimeStampMixin, SlugMixin):
         description="Название масти",
         examples=["Гнедая"],
     )
+    short_name: str | None = Field(
+        default=None,
+        description="Короткое название масти",
+        examples=["гн."],
+    )
     description: str | None = Field(
         default=None,
         description="Описание масти",

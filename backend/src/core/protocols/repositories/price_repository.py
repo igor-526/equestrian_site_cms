@@ -21,7 +21,7 @@ class PriceGroupRepositoryProtocol(BaseRepositoryProtocol[PriceGroup], Protocol)
 
 class PriceRepositoryProtocol(BaseRepositoryProtocol[Price], Protocol):
     async def find_by_name(self, name: str) -> Price | None: ...
-    async def get_by_slug_or_id(self, slug_or_id: str) -> Price | None: ...
+    async def get_by_slug_or_id(self, slug_or_id: str | UUID) -> Price | None: ...
     async def get_filtered(
         self,
         *,
@@ -36,6 +36,8 @@ class PriceRepositoryProtocol(BaseRepositoryProtocol[Price], Protocol):
     async def set_price_groups(self, price_id: UUID, group_ids: list[UUID]) -> None: ...
     async def get_price_photos(self, price_id: UUID) -> list[PricePhotos]: ...
     async def set_price_photos(
-        self, price_id: UUID, photo_ids: list[UUID] | None = None, main_photo_id: UUID | None = None
+        self,
+        price_id: UUID,
+        photo_ids: list[UUID] | None = None,
+        main_photo_id: UUID | None = None,
     ) -> None: ...
-

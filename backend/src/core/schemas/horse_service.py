@@ -3,7 +3,7 @@ from uuid import UUID
 
 from pydantic import Field, field_serializer
 
-from core.entities.horse_service import HorseService
+from core.entities.horse_service import HorseServiceEntity
 from core.entities.price import PriceFormatter
 from core.schemas.baseschema import BaseSchema
 
@@ -34,9 +34,6 @@ class HorseServiceOutDto(BaseSchema):
             return None
         return value.isoformat()
 
-    class Config:
-        from_attributes = True
-
 
 class HorseServiceOutWithPageDataDto(HorseServiceOutDto):
     """DTO для вывода услуги с page_data."""
@@ -48,11 +45,17 @@ class HorseServiceCreateDto(BaseSchema):
     """DTO для создания услуги."""
 
     name: str = Field(..., description="Название услуги")
-    slug: str | None = Field(None, description="Slug (опционально, генерируется автоматически)")
+    slug: str | None = Field(
+        None, description="Slug (опционально, генерируется автоматически)"
+    )
     description: str | None = Field(None, description="Описание услуги")
     price: int = Field(..., description="Цена услуги в копейках")
-    price_formatter: PriceFormatter = Field(PriceFormatter.equal, description="Формат отображения цены")
-    page_data: str | None = Field(None, description="Данные страницы в формате HTML/текста")
+    price_formatter: PriceFormatter = Field(
+        PriceFormatter.equal, description="Формат отображения цены"
+    )
+    page_data: str | None = Field(
+        None, description="Данные страницы в формате HTML/текста"
+    )
 
 
 class HorseServiceUpdateDto(BaseSchema):
@@ -62,6 +65,9 @@ class HorseServiceUpdateDto(BaseSchema):
     slug: str | None = Field(None, description="Slug")
     description: str | None = Field(None, description="Описание услуги")
     price: int | None = Field(None, description="Цена услуги в копейках")
-    price_formatter: PriceFormatter | None = Field(None, description="Формат отображения цены")
-    page_data: str | None = Field(None, description="Данные страницы в формате HTML/текста")
-
+    price_formatter: PriceFormatter | None = Field(
+        None, description="Формат отображения цены"
+    )
+    page_data: str | None = Field(
+        None, description="Данные страницы в формате HTML/текста"
+    )

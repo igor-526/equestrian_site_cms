@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Date, ForeignKey, String, Table, Text, Integer
+from sqlalchemy import Column, Date, ForeignKey, Integer, String, Table, Text
 
 from utils.basemodel import metadata, timestamp_columns, uuid_pk
 

@@ -15,6 +15,7 @@ from api import (
     coat_color_router,
     horse_owner_router,
     horse_service_router,
+    horses_router,
     photos_router,
     prices_router,
     site_settings_router,
@@ -44,6 +45,7 @@ app = FastAPI(
 
 router = APIRouter(prefix="/api")
 router.include_router(auth_router, prefix="/auth", tags=["Auth"])
+router.include_router(horses_router, prefix="/horses", tags=["Horses"])
 router.include_router(breeds_router)
 router.include_router(coat_color_router)
 router.include_router(horse_owner_router)
@@ -112,7 +114,6 @@ def pydantic_validation_error_handler(_: Request, exc: ValidationError) -> JSONR
     """Преобразует ошибки валидации Pydantic в ClientError."""
     errors = exc.errors()
     if errors:
-        # Берем первую ошибку для сообщения
         error = errors[0]
         field = " -> ".join(str(loc) for loc in error.get("loc", []))
         message = error.get("msg", "Ошибка валидации")

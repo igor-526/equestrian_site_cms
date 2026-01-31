@@ -62,6 +62,3 @@ class SiteSettingUpdateDto(BaseSchema):
     name: str | None = Field(None, description="Человекочитаемое название настройки")
     description: str | None = Field(None, description="Описание настройки")
     type: SiteSettingType | None = Field(None, description="Тип настройки")
-
-
-

@@ -18,8 +18,12 @@ class CoatColorRepositoryProtocol(BaseRepositoryProtocol[CoatColor], Protocol):
         slug: str | None = None,
         description: str | None = None,
         page_data: str | None = None,
-        sort: list[Literal["name", "description", "slug", "-name", "-description", "-slug"]] | None = None,
+        sort: (
+            list[
+                Literal["name", "description", "slug", "-name", "-description", "-slug"]
+            ]
+            | None
+        ) = None,
         limit: int | None = None,
         offset: int | None = None,
     ) -> tuple[list[CoatColor], int]: ...
-

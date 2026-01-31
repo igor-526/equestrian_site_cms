@@ -64,7 +64,9 @@ class PriceGroupRepository(AbstractRepository[PriceGroup]):
             stmt = stmt.offset(offset)
 
         rows = await self.session.execute(stmt)
-        entities = [self.entity.model_validate(dict(row)) for row in rows.mappings().all()]
+        entities = [
+            self.entity.model_validate(dict(row)) for row in rows.mappings().all()
+        ]
 
         total_result = await self.session.execute(count_stmt)
         total = total_result.scalar() or 0
@@ -92,8 +94,11 @@ class PriceRepository(AbstractRepository[Price]):
         except ValueError:
             return slug_or_id
 
-    async def get_by_slug_or_id(self, slug_or_id: str) -> Price | None:
+    async def get_by_slug_or_id(self, slug_or_id: str | UUID) -> Price | None:
         """Получить цену по slug или UUID."""
+        if isinstance(slug_or_id, UUID):
+            return await self.get_by_id(slug_or_id)
+
         parsed = self._parse_slug_or_id(slug_or_id)
         if isinstance(parsed, UUID):
             return await self.get_by_id(parsed)
@@ -119,7 +124,7 @@ class PriceRepository(AbstractRepository[Price]):
         count_stmt = select(func.count()).select_from(self.table)
 
         conditions = []
-        
+
         # Фильтр по name - вхождение или список вхождений
         if name:
             if isinstance(name, list):
@@ -127,25 +132,27 @@ class PriceRepository(AbstractRepository[Price]):
                 conditions.append(or_(*name_conditions))
             else:
                 conditions.append(self.table.c.name.ilike(f"%{name}%"))
-        
+
         # Фильтр по description - вхождение
         if description:
             conditions.append(self.table.c.description.ilike(f"%{description}%"))
-        
+
         # Фильтр по groups - полное совпадение с наименованием группы
         if groups:
             if isinstance(groups, str):
                 groups = [groups]
-            
+
             # Подзапрос для получения price_id через группы
             group_ids_subquery = select(price_groups.c.id).where(
                 or_(*[price_groups.c.name == g for g in groups])
             )
-            
-            price_ids_subquery = select(price_groups_relations.c.price_id).where(
-                price_groups_relations.c.group_id.in_(group_ids_subquery)
-            ).distinct()
-            
+
+            price_ids_subquery = (
+                select(price_groups_relations.c.price_id)
+                .where(price_groups_relations.c.group_id.in_(group_ids_subquery))
+                .distinct()
+            )
+
             conditions.append(self.table.c.id.in_(price_ids_subquery))
 
         if conditions:
@@ -170,7 +177,9 @@ class PriceRepository(AbstractRepository[Price]):
             stmt = stmt.offset(offset)
 
         rows = await self.session.execute(stmt)
-        entities = [self.entity.model_validate(dict(row)) for row in rows.mappings().all()]
+        entities = [
+            self.entity.model_validate(dict(row)) for row in rows.mappings().all()
+        ]
 
         total_result = await self.session.execute(count_stmt)
         total = total_result.scalar() or 0
@@ -179,10 +188,13 @@ class PriceRepository(AbstractRepository[Price]):
 
     async def get_price_groups(self, price_id: UUID) -> list[PriceGroupsRelation]:
         """Получить связи цены с группами."""
-        stmt = select(price_groups_relations).where(price_groups_relations.c.price_id == price_id)
+        stmt = select(price_groups_relations).where(
+            price_groups_relations.c.price_id == price_id
+        )
         rows = await self.session.execute(stmt)
         return [
-            PriceGroupsRelation.model_validate(dict(row)) for row in rows.mappings().all()
+            PriceGroupsRelation.model_validate(dict(row))
+            for row in rows.mappings().all()
         ]
 
     async def set_price_groups(self, price_id: UUID, group_ids: list[UUID]) -> None:
@@ -195,7 +207,9 @@ class PriceRepository(AbstractRepository[Price]):
 
         # Добавляем новые связи
         if group_ids:
-            values = [{"price_id": price_id, "group_id": group_id} for group_id in group_ids]
+            values = [
+                {"price_id": price_id, "group_id": group_id} for group_id in group_ids
+            ]
             insert_stmt = insert(price_groups_relations).values(values)
             await self.session.execute(insert_stmt)
 
@@ -208,18 +222,26 @@ class PriceRepository(AbstractRepository[Price]):
         return [PricePhotos.model_validate(dict(row)) for row in rows.mappings().all()]
 
     async def set_price_photos(
-        self, price_id: UUID, photo_ids: list[UUID] | None = None, main_photo_id: UUID | None = None
+        self,
+        price_id: UUID,
+        photo_ids: list[UUID] | None = None,
+        main_photo_id: UUID | None = None,
     ) -> None:
         """Установить связи цены с фотографиями."""
         # Если передан photo_ids, заменяем все связи
         if photo_ids is not None:
             # Удаляем все существующие связи
-            delete_stmt = delete(price_photos).where(price_photos.c.price_id == price_id)
+            delete_stmt = delete(price_photos).where(
+                price_photos.c.price_id == price_id
+            )
             await self.session.execute(delete_stmt)
 
             # Добавляем новые связи
             if photo_ids:
-                values = [{"price_id": price_id, "photo_id": photo_id, "is_main": False} for photo_id in photo_ids]
+                values = [
+                    {"price_id": price_id, "photo_id": photo_id, "is_main": False}
+                    for photo_id in photo_ids
+                ]
                 insert_stmt = insert(price_photos).values(values)
                 await self.session.execute(insert_stmt)
 
@@ -238,7 +260,7 @@ class PriceRepository(AbstractRepository[Price]):
             check_stmt = select(price_photos).where(
                 and_(
                     price_photos.c.price_id == price_id,
-                    price_photos.c.photo_id == main_photo_id
+                    price_photos.c.photo_id == main_photo_id,
                 )
             )
             check_result = await self.session.execute(check_stmt)
@@ -249,7 +271,7 @@ class PriceRepository(AbstractRepository[Price]):
                     .where(
                         and_(
                             price_photos.c.price_id == price_id,
-                            price_photos.c.photo_id == main_photo_id
+                            price_photos.c.photo_id == main_photo_id,
                         )
                     )
                     .values(is_main=True)
@@ -263,4 +285,3 @@ class PriceRepository(AbstractRepository[Price]):
                 await self.session.execute(insert_main_stmt)
 
         await self.session.flush()
-

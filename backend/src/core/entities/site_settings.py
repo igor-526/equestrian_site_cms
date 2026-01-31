@@ -1,4 +1,5 @@
 from enum import StrEnum, auto
+
 from pydantic import Field
 
 from .base import Entity, TimeStampMixin

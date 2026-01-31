@@ -35,7 +35,16 @@ class SiteSettingsService:
             elif setting_type == SiteSettingType.boolean:
                 # Булево значение
                 value_lower = value.lower().strip()
-                if value_lower not in ("true", "false", "1", "0", "yes", "no", "on", "off"):
+                if value_lower not in (
+                    "true",
+                    "false",
+                    "1",
+                    "0",
+                    "yes",
+                    "no",
+                    "on",
+                    "off",
+                ):
                     raise ValueError(f"Неверное булево значение: {value}")
                 # Нормализуем к true/false
                 normalized = value_lower in ("true", "1", "yes", "on")
@@ -49,6 +58,7 @@ class SiteSettingsService:
             elif setting_type == SiteSettingType.date:
                 # Дата в формате YYYY-MM-DD
                 from datetime import date as date_type
+
                 date_type.fromisoformat(value)
                 return value
 
@@ -105,15 +115,23 @@ class SiteSettingsService:
 
         # Если обновляется key, проверяем уникальность
         if "key" in update_data:
-            existing = await self.site_settings_repository.find_by_key(update_data["key"])
+            existing = await self.site_settings_repository.find_by_key(
+                update_data["key"]
+            )
             if existing is not None and existing.id != site_setting.id:
-                raise ClientError(f"Настройка с ключом '{update_data['key']}' уже существует")
+                raise ClientError(
+                    f"Настройка с ключом '{update_data['key']}' уже существует"
+                )
 
         # Если обновляется name, проверяем уникальность
         if "name" in update_data:
-            existing = await self.site_settings_repository.find_by_name(update_data["name"])
+            existing = await self.site_settings_repository.find_by_name(
+                update_data["name"]
+            )
             if existing is not None and existing.id != site_setting.id:
-                raise ClientError(f"Настройка с названием '{update_data['name']}' уже существует")
+                raise ClientError(
+                    f"Настройка с названием '{update_data['name']}' уже существует"
+                )
 
         # Если обновляется value или type, валидируем значение
         if "value" in update_data or "type" in update_data:
@@ -149,8 +167,24 @@ class SiteSettingsService:
         name: str | None = None,
         value: str | None = None,
         description: str | None = None,
-        type: list[Literal["string", "number", "float", "boolean", "object", "date", "time", "datetime"]] | None = None,
-        sort: list[Literal["key", "name", "type", "-key", "-name", "-type"]] | None = None,
+        type: (
+            list[
+                Literal[
+                    "string",
+                    "number",
+                    "float",
+                    "boolean",
+                    "object",
+                    "date",
+                    "time",
+                    "datetime",
+                ]
+            ]
+            | None
+        ) = None,
+        sort: (
+            list[Literal["key", "name", "type", "-key", "-name", "-type"]] | None
+        ) = None,
         limit: int | None = None,
         offset: int | None = None,
     ) -> tuple[list[SiteSetting], int]:
@@ -165,4 +199,3 @@ class SiteSettingsService:
             limit=limit,
             offset=offset,
         )
-

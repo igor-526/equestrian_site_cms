@@ -19,8 +19,24 @@ class SiteSettingsRepository(AbstractRepository[SiteSetting]):
         name: str | None = None,
         value: str | None = None,
         description: str | None = None,
-        type: list[Literal["string", "number", "float", "boolean", "object", "date", "time", "datetime"]] | None = None,
-        sort: list[Literal["key", "name", "type", "-key", "-name", "-type"]] | None = None,
+        type: (
+            list[
+                Literal[
+                    "string",
+                    "number",
+                    "float",
+                    "boolean",
+                    "object",
+                    "date",
+                    "time",
+                    "datetime",
+                ]
+            ]
+            | None
+        ) = None,
+        sort: (
+            list[Literal["key", "name", "type", "-key", "-name", "-type"]] | None
+        ) = None,
         limit: int | None = None,
         offset: int | None = None,
     ) -> tuple[list[SiteSetting], int]:
@@ -62,7 +78,9 @@ class SiteSettingsRepository(AbstractRepository[SiteSetting]):
             stmt = stmt.offset(offset)
 
         rows = await self.session.execute(stmt)
-        entities = [self.entity.model_validate(dict(row)) for row in rows.mappings().all()]
+        entities = [
+            self.entity.model_validate(dict(row)) for row in rows.mappings().all()
+        ]
 
         total_result = await self.session.execute(count_stmt)
         total = total_result.scalar() or 0
@@ -81,6 +99,3 @@ class SiteSettingsRepository(AbstractRepository[SiteSetting]):
     async def find_by_name(self, name: str) -> SiteSetting | None:
         """Проверить существование name."""
         return await super().find_by_name(name)
-
-
-

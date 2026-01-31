@@ -10,10 +10,10 @@ shell:
 
 # Opens postgresql command line interface
 psql:
-	docker exec -it eqsitecms-$(eq)-db psql -U nexoradev
+	docker exec -it eqsitecms-$(eq)-db psql -U eqsitecms
 
 dumpall:
-	docker exec -t eqsitecms-$(eq)-db pg_dumpall -c -U nexoradev > dump_`date +%Y-%m-%d"_"%H_%M_%S`.sql
+	docker exec -t eqsitecms-$(eq)-db pg_dumpall -c -U eqsitecms > dump_`date +%Y-%m-%d"_"%H_%M_%S`.sql
 
 lint:
 	uv run mypy src
@@ -23,23 +23,7 @@ format:
 
 # Dangerous
 drop_db:
-	docker exec -t eqsitecms-$(eq)-db psql -U nexoradev -d postgres -c "DROP DATABASE IF EXISTS nexoradev;"
+	docker exec -t eqsitecms-$(eq)-db psql -U eqsitecms -d postgres -c "DROP DATABASE IF EXISTS eqsitecms;"
 
 seed_dump:
-	cat seed_mocks.sql | docker exec -i eqsitecms-$(eq)-db psql -U nexoradev
-
-test:
-	PYTHONPATH=src uv run pytest -s -vv tests/
-
-test_only_unit:
-	PYTHONPATH=src uv run pytest -s -vv tests/unit/
-
-test_only_integration:
-	PYTHONPATH=src uv run pytest -s -vv tests/integration/
-
-populate_demo_data:
-	DB_HOST=localhost PYTHONPATH=src uv run python maintain/generate_dev_data.py
-
-collect_by_formulas:
-	DB_HOST=localhost PYTHONPATH=src uv run python maintain/run_statistic_formulas.py
-
+	cat seed_mocks.sql | docker exec -i eqsitecms-$(eq)-db psql -U eqsitecms

@@ -3,6 +3,7 @@ from .breeds import router as breeds_router
 from .coat_color import router as coat_color_router
 from .horse_owner import router as horse_owner_router
 from .horse_service import router as horse_service_router
+from .horses import router as horses_router
 from .photos import router as photos_router
 from .prices import router as prices_router
 from .site_settings import router as site_settings_router

@@ -104,7 +104,9 @@ class PriceCreateDto(BaseSchema):
     name: str = Field(..., description="Название цены")
     description: str | None = Field(None, description="Описание цены")
     groups: list[UUID] = Field(default_factory=list, description="Список UUID групп")
-    page_data: str | None = Field(None, description="Данные страницы в формате HTML/текста")
+    page_data: str | None = Field(
+        None, description="Данные страницы в формате HTML/текста"
+    )
     price_tables: list[TableEntity] | None = Field(None, description="Таблицы цен")
 
 
@@ -113,8 +115,12 @@ class PriceUpdateDto(BaseSchema):
 
     name: str | None = Field(None, description="Название цены")
     description: str | None = Field(None, description="Описание цены")
-    groups: list[UUID] | None = Field(None, description="Список UUID групп (заменяет все связи)")
-    page_data: str | None = Field(None, description="Данные страницы в формате HTML/текста")
+    groups: list[UUID] | None = Field(
+        None, description="Список UUID групп (заменяет все связи)"
+    )
+    page_data: str | None = Field(
+        None, description="Данные страницы в формате HTML/текста"
+    )
     price_tables: list[TableEntity] | None = Field(None, description="Таблицы цен")
 
 
@@ -123,4 +129,3 @@ class PricePhotosUpdateDto(BaseSchema):
 
     photo_ids: list[UUID] | None = Field(None, description="Список UUID фотографий")
     main: UUID | None = Field(None, description="UUID главной фотографии")
-

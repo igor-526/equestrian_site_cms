@@ -28,7 +28,6 @@ class PhotoOutDto(BaseSchema):
             return None
         return value.isoformat()
 
-    @computed_field
     @property
     def url(self) -> str:
         """Вычисляемый URL для фотографии."""
@@ -42,17 +41,22 @@ class PhotoOutDto(BaseSchema):
 class PhotoCreateDto(BaseSchema):
     """DTO для создания фотографии."""
 
-    name: str | None = Field(None, description="Название фотографии (опционально, генерируется из имени файла)")
+    name: str | None = Field(
+        None,
+        description="Название фотографии (опционально, генерируется из имени файла)",
+    )
     description: str | None = Field(None, description="Описание фотографии")
 
 
 class PhotoUpdateDto(BaseSchema):
     """DTO для обновления фотографии."""
 
-    name: str | None = Field(None, description="Название фотографии (пустая строка = сгенерировать из файла)")
+    name: str | None = Field(
+        None, description="Название фотографии (пустая строка = сгенерировать из файла)"
+    )
     description: str | None = Field(
         default=None,
-        description="Описание фотографии (None = не обновлять, '' = пустая строка)"
+        description="Описание фотографии (None = не обновлять, '' = пустая строка)",
     )
 
 
@@ -75,4 +79,3 @@ class PhotoBatchDeleteDto(BaseSchema):
     """DTO для массового удаления фотографий."""
 
     ids: list[UUID] = Field(..., description="Список UUID фотографий для удаления")
-

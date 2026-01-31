@@ -14,10 +14,12 @@ class HorseOwnerRepositoryProtocol(BaseRepositoryProtocol[HorseOwner], Protocol)
         type: list[str] | None = None,
         address: str | None = None,
         phone_numbers: str | None = None,
-        sort: list[Literal["name", "description", "type", "-name", "-description", "-type"]] | None = None,
+        sort: (
+            list[
+                Literal["name", "description", "type", "-name", "-description", "-type"]
+            ]
+            | None
+        ) = None,
         limit: int | None = None,
         offset: int | None = None,
     ) -> tuple[list[HorseOwner], int]: ...
-
-
-

@@ -28,10 +28,10 @@ class AuthService:
 
         # Получаем группы доступа
         scopes = await self.user_repository.get_user_scopes(user.id)
-        
+
         user_dict = user.model_dump()
         user_dict["scopes"] = scopes
-        
+
         return UserOutDto.model_validate(user_dict)
 
     async def register(self, data: RegisterData) -> UserOutDto:

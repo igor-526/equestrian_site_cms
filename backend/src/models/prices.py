@@ -1,5 +1,6 @@
 from sqlalchemy import Boolean, Column, ForeignKey, String, Table, Text, text
 from sqlalchemy.dialects.postgresql import JSONB
+
 from utils.basemodel import metadata, timestamp_columns, uuid_pk
 
 prices = Table(
@@ -33,7 +34,9 @@ price_groups_relations = Table(
     metadata,
     uuid_pk(),
     Column("price_id", ForeignKey("prices.id", ondelete="CASCADE"), nullable=False),
-    Column("group_id", ForeignKey("price_groups.id", ondelete="CASCADE"), nullable=False),
+    Column(
+        "group_id", ForeignKey("price_groups.id", ondelete="CASCADE"), nullable=False
+    ),
 )
 
 price_photos = Table(

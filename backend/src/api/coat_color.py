@@ -27,12 +27,12 @@ async def get_coat_colors(
     slug: str | None = Query(None, description="Фильтр по slug (вхождение)"),
     description: str | None = Query(None, description="Фильтр по описанию (вхождение)"),
     page_data: str | None = Query(None, description="Фильтр по page_data (вхождение)"),
-    sort: list[Literal["name", "description", "slug", "-name", "-description", "-slug"]] | None = Query(
-        None, description="Сортировка"
-    ),
+    sort: (
+        list[Literal["name", "description", "slug", "-name", "-description", "-slug"]]
+        | None
+    ) = Query(None, description="Сортировка"),
     limit: int | None = Query(None, description="Лимит"),
     offset: int | None = Query(None, description="Смещение"),
-
 ) -> PaginatedEntities[CoatColorOutDto]:
     entities, total = await coat_color_service.get_filtered(
         name=name,
@@ -63,6 +63,7 @@ async def get_coat_color(
     coat_color = await coat_color_service.get_by_slug_or_id(slug_or_id)
     if coat_color is None:
         from fastapi import HTTPException
+
         raise HTTPException(status_code=404, detail="Масть не найдена")
 
     if page_data:
@@ -110,4 +111,3 @@ async def delete_coat_color(
     coat_color_service: Annotated[CoatColorService, Depends(get_coat_color_service)],
 ) -> None:
     await coat_color_service.delete(slug_or_id)
-
